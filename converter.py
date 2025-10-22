@@ -85,7 +85,7 @@ def main():
 
     # 3. Merge CLI arguments with config file (CLI overrides config)
     # Define project_root as 4 levels up from the script directory
-    project_root = Path(script_dir).parents[3]
+    project_root = Path(script_dir).parents[2]
     # Resolve input_dir and output_dir relative to project_root
     input_dir = project_root / (args.input_dir or config.get('input_dir', 'architecture/ta/reverse/cloud.ru/advanced/'))
     output_dir = project_root / (args.output_dir or config.get('output_dir', 'architecture/ta/converted/'))

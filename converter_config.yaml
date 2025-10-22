@@ -1,10 +1,10 @@
 # Default configuration for the converter script
 
 # Input directory containing the source architecture files (e.g., from reverse engineering)
-input_dir: 'C:\Users\aaksi\Documents\seaf_dev\seaf-dzo-example\architecture\ta\reverse\cloud.ru\advanced\'
+input_dir: 'architecture/ta/reverse/cloud.ru/advanced/'
 
 # Output directory for the converted seaf-core entities
-output_dir: 'C:\Users\aaksi\Documents\seaf_dev\seaf-dzo-example\architecture\ta\converted'
+output_dir: 'architecture/ta/converted'
 
 # List of entities to convert.
 # Use '__all__' to convert all supported entities.

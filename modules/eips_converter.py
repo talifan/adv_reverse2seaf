@@ -1,4 +1,29 @@
 # modules/eips_converter.py
+import ipaddress
+
+def find_segment_from_ip(source_data, ip_addr):
+    """Finds the network segment by checking which subnet's CIDR contains the IP."""
+    if not ip_addr:
+        return None
+    
+    try:
+        ip_to_check = ipaddress.ip_address(ip_addr)
+    except ValueError:
+        return None # Invalid IP address
+
+    subnets_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.subnets', {})
+    for subnet_key, subnet_details in subnets_data.items():
+        cidr = subnet_details.get('cidr')
+        if cidr:
+            try:
+                net = ipaddress.ip_network(cidr)
+                if ip_to_check in net:
+                    vpc_id = subnet_details.get('vpc')
+                    if vpc_id:
+                        return f"flix.vpcs.{vpc_id}"
+            except ValueError:
+                continue # Ignore invalid CIDRs
+    return None
 
 def convert(source_data):
     """
@@ -37,12 +62,16 @@ def convert(source_data):
 
         description = '\n'.join(description_parts).strip()
 
+        # Resolve segment from internal IP address
+        segment_ref = find_segment_from_ip(source_data, eip_details.get('int_address'))
+
         converted_networks[new_id] = {
             'title': eip_details.get('ext_address'),
             'description': description,
             'external_id': eip_details.get('id'),
             'type': 'WAN', # Fixed value for EIP
             'wan_ip': eip_details.get('ext_address'), # Map external address to wan_ip
+            'segment': segment_ref,
             'location': [eip_details.get('DC')] if eip_details.get('DC') else [],
             'provider': 'Cloud.ru'
             # Other fields like segment, etc. are not available in source or set to None

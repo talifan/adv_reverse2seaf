@@ -11,8 +11,14 @@ from nat_gateways_converter import convert
 class TestNatGatewaysConverter(unittest.TestCase):
 
     def test_convert_nat_gateways(self):
-        # Sample input data including Subnets for linking
+        # Sample input data including Subnets and VPCs for linking
         source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
+                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'name': 'vpc-internal'
+                }
+            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
@@ -68,6 +74,7 @@ class TestNatGatewaysConverter(unittest.TestCase):
                     'realization_type': 'Виртуальный',
                     'type': 'NAT',
                     'network_connection': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
+                    'segment': 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
                     'location': ['flix.dc.01'],
                     'address': '10.10.0.25'
                 }
@@ -76,8 +83,6 @@ class TestNatGatewaysConverter(unittest.TestCase):
 
         # Run the conversion
         converted_data = convert(source_data)
-
-        print(converted_data)
 
         # Assert that the result is as expected
         self.assertEqual(converted_data, expected_output)

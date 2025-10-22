@@ -20,6 +20,9 @@ def generate_summary(conversion_results, skipped_entities, failed_conversions):
 
     detailed_discrepancies = []
 
+    # Define entities that are known to be derived from others, not from a direct source file
+    DERIVED_ENTITIES = ['cluster_virtualization', 'dc_az', 'dc_region']
+
     # Sort results to have a consistent order
     sorted_results = sorted(conversion_results, key=lambda x: x.get('source_name') or '')
 
@@ -51,11 +54,16 @@ def generate_summary(conversion_results, skipped_entities, failed_conversions):
                 # This is a heuristic based on user feedback.
                 is_match = source_count in target_counts.values()
 
+        is_derived = source_name in DERIVED_ENTITIES and source_count == 0 and total_converted > 0
+
         if status == 'FAILED':
             status_color = COLOR_RED
             status_text = "FAILED"
             if source_count > 0:
                  detailed_discrepancies.append(f"  - Source entity '{source_name}' ({source_count} found) failed to convert.")
+        elif is_derived:
+            status_color = COLOR_YELLOW
+            status_text = "DERIVED"
         elif is_match:
             status_color = COLOR_GREEN
             status_text = "OK"

@@ -11,8 +11,14 @@ from elbs_converter import convert
 class TestElbsConverter(unittest.TestCase):
 
     def test_convert_elbs(self):
-        # Sample input data including Subnets for linking
+        # Sample input data including Subnets and VPCs for linking
         source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
+                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'name': 'vpc-internal'
+                }
+            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
                     'id': '6b2820d7-17c6-409a-91cb-b634cf596fdb',
@@ -82,6 +88,7 @@ class TestElbsConverter(unittest.TestCase):
                     'realization_type': 'Виртуальный',
                     'type': 'Маршрутизатор',
                     'network_connection': ['flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
+                    'segment': 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
                     'location': ['flix.dc.01'],
                     'address': '10.10.10.30'
                 }

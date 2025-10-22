@@ -10,8 +10,14 @@ from vpn_gateways_converter import convert
 class TestVpnGatewaysConverter(unittest.TestCase):
 
     def test_convert_vpn_gateways(self):
-        # Sample input data including Subnets for linking
+        # Sample input data including Subnets and VPCs for linking
         source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
+                'flix.vpcs.abddcd66-c607-4ec6-9d12-30378e0e54c0': {
+                    'id': 'abddcd66-c607-4ec6-9d12-30378e0e54c0',
+                    'name': 'vpc-external'
+                }
+            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'flix.subnets.fa768d9d-787e-4778-930d-8b8049f01df4': {
                     'id': 'fa768d9d-787e-4778-930d-8b8049f01df4',
@@ -45,6 +51,7 @@ class TestVpnGatewaysConverter(unittest.TestCase):
                     'realization_type': 'Виртуальный',
                     'type': 'VPN',
                     'network_connection': ['flix.subnets.fa768d9d-787e-4778-930d-8b8049f01df4'],
+                    'segment': 'flix.vpcs.abddcd66-c607-4ec6-9d12-30378e0e54c0',
                     'location': ['flix.dc.01'],
                     'address': '188.72.107.53'
                 }

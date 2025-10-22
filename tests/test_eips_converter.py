@@ -10,8 +10,22 @@ from eips_converter import convert
 class TestEipsConverter(unittest.TestCase):
 
     def test_convert_eips(self):
-        # Sample input data for EIPs
+        # Sample input data for EIPs, including subnets and vpcs for segment lookup
         source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
+                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'name': 'vpc-internal'
+                }
+            },
+            'seaf.ta.reverse.cloud_ru.advanced.subnets': {
+                'flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
+                    'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
+                    'name': 'subnet-Prod',
+                    'cidr': '10.1.1.0/24',
+                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90'
+                }
+            },
             'seaf.ta.reverse.cloud_ru.advanced.eips': {
                 'flix.eips.37ee7c4f-75b8-45be-b6f4-42df28771e87': {
                     'id': '37ee7c4f-75b8-45be-b6f4-42df28771e87',
@@ -40,6 +54,7 @@ class TestEipsConverter(unittest.TestCase):
                     'external_id': '37ee7c4f-75b8-45be-b6f4-42df28771e87',
                     'type': 'WAN',
                     'wan_ip': '73.54.34.19',
+                    'segment': 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
                     'location': ['flix.dc.01'],
                     'provider': 'Cloud.ru'
                 }
