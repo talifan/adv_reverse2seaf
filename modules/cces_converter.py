@@ -73,8 +73,9 @@ def convert(source_data):
         # Resolve auth (authentication)
         auth_ref = find_kb_key(source_data, cce_details.get('authentication'), "IdP") # Assuming IdP tag for authentication
 
-        # Resolve location (DC)
-        location_ref = [cce_details.get('DC')] if cce_details.get('DC') else []
+        # Resolve location (DC) based on masters_az
+        location_refs = [f"flix.dc.{az_name}" for az_name in cce_details.get('masters_az', []) if az_name]
+        location_refs = [ref for ref in location_refs if ref] # Filter out None values
 
         converted_k8s_clusters[new_id] = {
             'title': cce_details.get('name'),
@@ -83,7 +84,7 @@ def convert(source_data):
             'fqdn': next((ep.get('url') for ep in cce_details.get('endpoints', []) if ep.get('type') == 'Internal'), None),
             'software': f"CCE {cce_details.get('version')}" if cce_details.get('version') else None,
             'availabilityzone': az_refs,
-            'location': location_ref,
+            'location': location_refs,
             'service_mesh': service_mesh_value,
             'network_connection': network_connection_refs,
             'management_networks': management_network_refs,

@@ -66,7 +66,7 @@ class TestDmssConverter(unittest.TestCase):
                     'reservation_type': 'single',
                     'service_type': 'Интеграционная шина  (MQ, ETL, API)',
                     'availabilityzone': ['flix.dc_az.ru-moscow-1a'],
-                    'location': ['flix.dc.01'],
+                    'location': ['flix.dc.ru-moscow-1a'],
                     'network_connection': ['flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb']
                 }
             }

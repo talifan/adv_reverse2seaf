@@ -23,7 +23,17 @@ class TestVpnGatewaysConverter(unittest.TestCase):
                     'id': 'fa768d9d-787e-4778-930d-8b8049f01df4',
                     'name': 'subnet-internet',
                     'cidr': '10.1.1.0/24',
-                    'vpc': 'abddcd66-c607-4ec6-9d12-30378e0e54c0'
+                    'vpc': 'abddcd66-c607-4ec6-9d12-30378e0e54c0',
+                    'availability_zone': 'ru-moscow-1a',
+                    'DC': 'flix.dc.ru-moscow-1a'
+                }
+            },
+            'seaf.ta.reverse.cloud_ru.advanced.ecss': {
+                'flix.ecss.sample': {
+                    'id': 'sample',
+                    'name': 'ecs-sample',
+                    'az': 'ru-moscow-1a',
+                    'subnets': ['fa768d9d-787e-4778-930d-8b8049f01df4']
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.vpn_gateways': {
@@ -45,14 +55,14 @@ class TestVpnGatewaysConverter(unittest.TestCase):
             'seaf.ta.components.network': {
                 'flix.vpn_gateways.vpngw-offices': {
                     'title': 'vpngw-offices',
-                    'description': 'IP Address: 188.72.107.53\nProtocol: IPSec\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01',
+                    'description': 'IP Address: 188.72.107.53\nProtocol: IPSec\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.ru-moscow-1a',
                     'external_id': 'vpngw-offices',
                     'model': 'Cloud VPN Gateway',
                     'realization_type': 'Виртуальный',
                     'type': 'VPN',
                     'network_connection': ['flix.subnets.fa768d9d-787e-4778-930d-8b8049f01df4'],
                     'segment': 'flix.vpcs.abddcd66-c607-4ec6-9d12-30378e0e54c0',
-                    'location': ['flix.dc.01'],
+                    'location': ['flix.dc.ru-moscow-1a'],
                     'address': '188.72.107.53'
                 }
             }

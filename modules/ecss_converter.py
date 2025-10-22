@@ -28,11 +28,15 @@ def convert(source_data):
     for ecs_id, ecs_details in ecss_data.items():
         new_id = ecs_id
         
+        cpu_details = ecs_details.get('cpu', {})
+
         description_parts = []
         if ecs_details.get('description'):
             description_parts.append(ecs_details.get('description'))
         if ecs_details.get('flavor'):
             description_parts.append(f"Flavor: {ecs_details.get('flavor')}")
+        if cpu_details.get('arch'):
+            description_parts.append(f"CPU Architecture: {cpu_details.get('arch')}")
         if ecs_details.get('status'):
             description_parts.append(f"Status: {ecs_details.get('status')}")
         if ecs_details.get('addresses'):
@@ -49,48 +53,88 @@ def convert(source_data):
 
         description = '\n'.join(description_parts).strip()
 
-        # Convert disks
         converted_disks = []
-        # Assuming disks is a list of dictionaries, where each dictionary is a disk
-        for disk_details in ecs_details.get('disks', []):
-            if isinstance(disk_details, dict):
+        disks_data = ecs_details.get('disks', [])
+        if isinstance(disks_data, dict):
+            disks_data = [disks_data]
+
+        for disk_item in disks_data:
+            if not isinstance(disk_item, dict):
+                continue
+
+            for disk_id, disk_props in disk_item.items():
+                if not isinstance(disk_props, dict):
+                    continue
+
+                size_raw = disk_props.get('size')
+                size_gb = 0
+                if size_raw:
+                    size_str = str(size_raw).strip()
+                    numeric_chars = []
+                    for char in size_str:
+                        if char.isdigit() or (char == '.' and '.' not in numeric_chars):
+                            numeric_chars.append(char)
+                        else:
+                            break
+                    if numeric_chars:
+                        try:
+                            size_gb = int(float("".join(numeric_chars)))
+                        except ValueError:
+                            size_gb = 0
+                
                 converted_disks.append({
-                    'az': find_dc_az_key(source_data, disk_details.get('az')),
-                    'size': int(disk_details.get('size')) if disk_details.get('size') else 0,
-                    'type': disk_details.get('type'),
-                    'device': disk_details.get('device')
+                    'az': find_dc_az_key(source_data, disk_props.get('az')),
+                    'size': size_gb,
+                    'type': disk_props.get('type'),
+                    'device': disk_props.get('device')
                 })
         
-        # Convert RAM from MB to GB
         ram_mb = ecs_details.get('ram', 0)
         ram_gb = ram_mb // 1024 if ram_mb else 0
 
-        # Resolve AZ and Subnet references
         az_ref = find_dc_az_key(source_data, ecs_details.get('az'))
+        az_name = ecs_details.get('az')
+        location_ref = [f"flix.dc.{az_name}"] if az_name else []
         subnet_refs = [find_network_key(source_data, s_id) for s_id in ecs_details.get('subnets', [])]
-        subnet_refs = [ref for ref in subnet_refs if ref] # Filter out None values
+        subnet_refs = [ref for ref in subnet_refs if ref]
+
+        freq_raw = cpu_details.get('frequency')
+        freq_mhz = 0
+        if freq_raw:
+            freq_str = str(freq_raw).strip()
+            numeric_chars = []
+            for char in freq_str:
+                if char.isdigit() or (char == '.' and '.' not in numeric_chars):
+                    numeric_chars.append(char)
+                else:
+                    break
+            if numeric_chars:
+                try:
+                    freq_mhz = int(float("".join(numeric_chars)))
+                except ValueError:
+                    freq_mhz = 0
 
         converted_servers[new_id] = {
             'title': ecs_details.get('name'),
             'description': description,
             'external_id': ecs_details.get('id'),
-            'type': 'Виртуальный', # Fixed value for ECS
-            'fqdn': ecs_details.get('name'), # Using name as fqdn for now
+            'type': 'Виртуальный',
+            'fqdn': ecs_details.get('name'),
             'os': {
                 'type': ecs_details.get('os', {}).get('type'),
                 'bit': ecs_details.get('os', {}).get('bit')
             },
             'cpu': {
-                'cores': ecs_details.get('cpu', {}).get('cores'),
-                'frequency': int(ecs_details.get('cpu', {}).get('frequency')) if ecs_details.get('cpu', {}).get('frequency') else 0 # Convert to int
+                'cores': cpu_details.get('cores'),
+                'frequency': freq_mhz
             },
             'ram': ram_gb,
             'nic_qty': ecs_details.get('nic_qty'),
             'disks': converted_disks,
             'az': [az_ref] if az_ref else [],
+            'location': location_ref,
             'subnets': subnet_refs,
-            'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster' # Filled with reference to virtualization cluster
-            # Other fields like is_part_of_compute_service, etc. are left as None/empty for now
+            'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
         }
 
     return {'seaf.ta.components.server': converted_servers}

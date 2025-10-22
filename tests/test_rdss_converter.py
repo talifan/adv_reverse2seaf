@@ -78,7 +78,7 @@ class TestRdssConverter(unittest.TestCase):
                     'reservation_type': 'Single',
                     'service_type': 'СУБД',
                     'availabilityzone': ['flix.dc_az.ru-moscow-1b'],
-                    'location': ['flix.dc.01'],
+                    'location': ['flix.dc.ru-moscow-1b'],
                     'network_connection': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1']
                 }
             }

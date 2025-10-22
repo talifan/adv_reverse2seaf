@@ -83,6 +83,10 @@ def convert(source_data):
         az_refs = [find_dc_az_key(source_data, az_name) for az_name in sorted(list(unique_node_azs))]
         az_refs = [ref for ref in az_refs if ref] # Filter out None values
 
+        # Resolve location (DC) based on collected node AZs
+        location_refs = [f"flix.dc.{az_name}" for az_name in sorted(list(unique_node_azs)) if az_name]
+        location_refs = [ref for ref in location_refs if ref] # Filter out None values
+
         # Resolve network_connection (subnet_id)
         network_connection_refs = []
         subnet_id = rds_details.get('subnet_id')
@@ -98,7 +102,7 @@ def convert(source_data):
             'reservation_type': rds_details.get('type'),
             'service_type': 'СУБД', # Fixed value for RDS
             'availabilityzone': az_refs,
-            'location': [rds_details.get('DC')] if rds_details.get('DC') else [],
+            'location': location_refs,
             'network_connection': network_connection_refs,
         }
 

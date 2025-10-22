@@ -21,7 +21,7 @@ def generate_summary(conversion_results, skipped_entities, failed_conversions):
     detailed_discrepancies = []
 
     # Define entities that are known to be derived from others, not from a direct source file
-    DERIVED_ENTITIES = ['cluster_virtualization', 'dc_az', 'dc_region']
+    DERIVED_ENTITIES = ['cluster_virtualization', 'dc_az', 'dc_region', 'dcs']
 
     # Sort results to have a consistent order
     sorted_results = sorted(conversion_results, key=lambda x: x.get('source_name') or '')

@@ -24,7 +24,9 @@ class TestNatGatewaysConverter(unittest.TestCase):
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
                     'name': 'subnet-Prod',
                     'cidr': '10.10.0.0/24',
-                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90'
+                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'availability_zone': 'ru-moscow-1c',
+                    'DC': 'flix.dc.ru-moscow-1c'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.nat_gateways': {
@@ -58,7 +60,7 @@ class TestNatGatewaysConverter(unittest.TestCase):
             'seaf.ta.components.network': {
                 'flix.nat_gateways.d9dade58-8b2c-4505-814f-eb38e503f1b1': {
                     'title': 'nat-gateway',
-                    'description': 'Main NAT Gateway\nInternal IP: 10.10.0.25\nStatus: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01\nSNAT Rules: ' + json.dumps([
+                    'description': 'Main NAT Gateway\nInternal IP: 10.10.0.25\nStatus: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nSNAT Rules: ' + json.dumps([
                         {
                             'id': '00c4fa69-38f5-4df7-88fd-f98ae315db51',
                             'eip_id': ['7785b143-e83f-4466-aa22-05b2419fc670'],
@@ -68,14 +70,14 @@ class TestNatGatewaysConverter(unittest.TestCase):
                             'cidr': '',
                             'source_type': 0
                         }
-                    ], indent=2) + '\nDNAT Rules: []',
+                    ], indent=2) + '\nDNAT Rules: []\nDC: flix.dc.ru-moscow-1c',
                     'external_id': 'd9dade58-8b2c-4505-814f-eb38e503f1b1',
                     'model': 'Cloud NAT Gateway',
                     'realization_type': 'Виртуальный',
                     'type': 'NAT',
                     'network_connection': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
                     'segment': 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'location': ['flix.dc.01'],
+                    'location': ['flix.dc.ru-moscow-1c'],
                     'address': '10.10.0.25'
                 }
             }

@@ -24,7 +24,9 @@ class TestElbsConverter(unittest.TestCase):
                     'id': '6b2820d7-17c6-409a-91cb-b634cf596fdb',
                     'name': 'subnet-Test',
                     'cidr': '10.10.10.0/24',
-                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90'
+                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'availability_zone': 'ru-moscow-1a',
+                    'DC': 'flix.dc.ru-moscow-1a'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.elbs': {
@@ -67,7 +69,7 @@ class TestElbsConverter(unittest.TestCase):
             'seaf.ta.components.network': {
                 'flix.elbs.6d174721-db0e-4758-9a96-2f626e1a6632': {
                     'title': 'elb-ingress-test',
-                    'description': 'Test ELB for ingress\nInternal IP: 10.10.10.30\nOperating Status: ONLINE\nProvisioning Status: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01\nListeners: ' + json.dumps([
+                    'description': 'Test ELB for ingress\nInternal IP: 10.10.10.30\nOperating Status: ONLINE\nProvisioning Status: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nListeners: ' + json.dumps([
                         {
                             'id': 'a230fdde-fe28-48dd-88a4-59926d9623b0',
                             'name': 'listener-1b3e',
@@ -82,14 +84,14 @@ class TestElbsConverter(unittest.TestCase):
                             'lb_algorithm': 'ROUND_ROBIN',
                             'members': []
                         }
-                    ], indent=2),
+                    ], indent=2) + '\nDC: flix.dc.ru-moscow-1a',
                     'external_id': '6d174721-db0e-4758-9a96-2f626e1a6632',
                     'model': 'Cloud ELB',
                     'realization_type': 'Виртуальный',
                     'type': 'Маршрутизатор',
                     'network_connection': ['flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
                     'segment': 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'location': ['flix.dc.01'],
+                    'location': ['flix.dc.ru-moscow-1a'],
                     'address': '10.10.10.30'
                 }
             }

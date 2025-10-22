@@ -47,10 +47,12 @@ class TestEcssConverter(unittest.TestCase):
                     'subnets': ['0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
                     'disks': [
                         {
-                            'device': '/dev/vda',
-                            'size': '50', # String in source, int in target
-                            'az': 'ru-moscow-1a',
-                            'type': 'SAS'
+                            'disk-uuid-1': {
+                                'device': '/dev/vda',
+                                'size': '50', # String in source, int in target
+                                'az': 'ru-moscow-1a',
+                                'type': 'SAS'
+                            }
                         }
                     ],
                     'tags': [
@@ -62,6 +64,58 @@ class TestEcssConverter(unittest.TestCase):
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
                     'DC': 'flix.dc.01',
                     'description': 'Example server description'
+                },
+                'flix.ecss.test-server-units': {
+                    'id': 'test-server-units',
+                    'name': 'ecs-test-units',
+                    'os': {
+                        'type': 'Windows'
+                    },
+                    'cpu': {
+                        'cores': 4,
+                        'frequency': '3000 MHz'
+                    },
+                    'ram': 8192,
+                    'disks': [
+                        {
+                            'disk-uuid-2': {
+                                'device': '/dev/vda',
+                                'size': '100 GB',
+                                'type': 'SSD'
+                            }
+                        }
+                    ],
+                    'az': 'ru-moscow-1b',
+                    'subnets': ['0d9f37b6-0889-4763-8cf3-20d9641af0c1']
+                },
+                'flix.ecss.test-server-float': {
+                    'id': 'test-server-float',
+                    'name': 'ecs-test-float',
+                    'cpu': {
+                        'frequency': '2.5GHz'
+                    },
+                    'disks': [
+                        {
+                            'disk-uuid-3': {
+                                'device': '/dev/vdb',
+                                'size': '120.5GB',
+                                'type': 'NVMe'
+                            }
+                        }
+                    ],
+                },
+                'flix.ecss.test-server-single-disk': {
+                    'id': 'test-server-single-disk',
+                    'name': 'ecs-test-single-disk',
+                    'disks': [
+                        {
+                            'disk-uuid-4': {
+                                'device': '/dev/vdc',
+                                'size': 200,
+                                'type': 'HDD'
+                            }
+                        }
+                    ]
                 }
             }
         }
@@ -94,7 +148,95 @@ class TestEcssConverter(unittest.TestCase):
                         }
                     ],
                     'az': ['flix.dc_az.ru-moscow-1a'],
+                    'location': ['flix.dc.ru-moscow-1a'],
                     'subnets': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
+                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                },
+                'flix.ecss.test-server-units': {
+                    'title': 'ecs-test-units',
+                    'description': '',
+                    'external_id': 'test-server-units',
+                    'type': 'Виртуальный',
+                    'fqdn': 'ecs-test-units',
+                    'os': {
+                        'type': 'Windows',
+                        'bit': None
+                    },
+                    'cpu': {
+                        'cores': 4,
+                        'frequency': 3000
+                    },
+                    'ram': 8,
+                    'nic_qty': None,
+                    'disks': [
+                        {
+                            'az': None,
+                            'size': 100,
+                            'type': 'SSD',
+                            'device': '/dev/vda'
+                        }
+                    ],
+                    'az': ['flix.dc_az.ru-moscow-1b'],
+                    'location': ['flix.dc.ru-moscow-1b'],
+                    'subnets': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
+                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                },
+                'flix.ecss.test-server-float': {
+                    'title': 'ecs-test-float',
+                    'description': '',
+                    'external_id': 'test-server-float',
+                    'type': 'Виртуальный',
+                    'fqdn': 'ecs-test-float',
+                    'os': {
+                        'type': None,
+                        'bit': None
+                    },
+                    'cpu': {
+                        'cores': None,
+                        'frequency': 2
+                    },
+                    'ram': 0,
+                    'nic_qty': None,
+                    'disks': [
+                        {
+                            'az': None,
+                            'size': 120,
+                            'type': 'NVMe',
+                            'device': '/dev/vdb'
+                        }
+                    ],
+                    'az': [],
+                    'location': [],
+                    'subnets': [],
+                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                },
+                'flix.ecss.test-server-single-disk': {
+                    'title': 'ecs-test-single-disk',
+                    'description': '',
+                    'external_id': 'test-server-single-disk',
+                    'type': 'Виртуальный',
+                    'fqdn': 'ecs-test-single-disk',
+                    'os': {
+                        'type': None,
+                        'bit': None
+                    },
+                    'cpu': {
+                        'cores': None,
+                        'frequency': 0
+                    },
+                    'ram': 0,
+                    'nic_qty': None,
+                    'disks': [
+                        {
+                            'az': None,
+                            'size': 200,
+                            'type': 'HDD',
+                            'device': '/dev/vdc'
+                        }
+                    ],
+                    'az': [],
+                    'location': [],
+                    'subnets': [],
                     'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
                 }
             }

@@ -56,18 +56,19 @@ entities_to_convert:
 
 | Исходная сущность (Cloud.ru) | Целевая сущность (SEAF-core) | Описание маппинга |
 | :--------------------------- | :--------------------------- | :---------------- |
-| `vpcs`                       | `seaf.ta.services.network_segment` | VPC преобразуется в сетевой сегмент. |
+| `dcs`                        | `seaf.ta.services.dc`        | **Новое:** ЦОД создается для каждой уникальной зоны доступности (AZ). Имя и адрес ЦОДа соответствуют имени AZ. |
+| `vpcs`                       | `seaf.ta.services.network_segment`, `seaf.ta.components.network` | VPC преобразуется в сетевой сегмент и виртуальный маршрутизатор, размещённый в соответствующем ЦОД (`location`) и подключённый к дочернему сегменту и сетям, попадающим в CIDR VPC. |
 | `subnets`                    | `seaf.ta.services.network`   | Подсеть преобразуется в сеть типа "LAN". |
-| `ecss`                       | `seaf.ta.components.server`  | Виртуальные машины преобразуются в серверы типа "Виртуальный". |
+| `ecss`                       | `seaf.ta.components.server`  | Виртуальные машины преобразуются в серверы типа "Виртуальный". Местоположение (`location`) сервера определяется его зоной доступности (AZ). |
 | `cces`                       | `seaf.ta.services.k8s`       | Кластеры Kubernetes преобразуются в сущности K8s. |
 | `rdss`                       | `seaf.ta.services.cluster`   | Реляционные БД как сервис преобразуются в кластеры типа "СУБД". |
-| `elbs`                       | `seaf.ta.components.network` | Балансировщики нагрузки преобразуются в сетевые устройства типа "Балансировщик". |
-| `nat_gateways`               | `seaf.ta.components.network` | NAT-шлюзы преобразуются в сетевые устройства типа "NAT". |
+| `elbs`                       | `seaf.ta.components.network` | Балансировщики нагрузки преобразуются в сетевые устройства типа "Балансировщик"; `location` берётся из AZ связанной подсети. |
+| `nat_gateways`               | `seaf.ta.components.network` | NAT-шлюзы преобразуются в сетевые устройства типа "NAT" с `location`, вычисленным по AZ подсети. |
 | `peerings`                   | `seaf.ta.services.network_links` | VPC Peering преобразуется в сетевую связь. |
 | `vaults`                     | `seaf.ta.services.storage` и `seaf.ta.services.backup` | Хранилища резервных копий преобразуются в сущности хранения и отдельные сущности резервных копий. |
-| `vpn_gateways`               | `seaf.ta.components.network` | VPN-шлюзы преобразуются в сетевые устройства типа "VPN". |
+| `vpn_gateways`               | `seaf.ta.components.network` | VPN-шлюзы преобразуются в сетевые устройства типа "VPN" с `location`, рассчитанным по AZ подключённой подсети. |
 | `vpn_connections`            | `seaf.ta.services.network_links` | VPN-соединения преобразуются в сетевые связи. |
-| `eips`                       | `seaf.ta.services.network`   | Elastic IP преобразуются в сети типа "WAN". |
+| `eips`                       | `seaf.ta.services.network`, `seaf.ta.services.network_links` | Elastic IP преобразуются в сети типа "WAN" и создают сетевые связи к внутренним ресурсам по `int_address`. |
 | `dmss`                       | `seaf.ta.services.cluster`   | Сервисы сообщений преобразуются в кластеры типа "Интеграционная шина". |
 | `security_groups`            | `seaf.ta.services.kb`        | Группы безопасности преобразуются в сущности Базы знаний (KB) с тегом "FW". |
 | `branches`                   | `seaf.ta.services.office`    | Филиалы преобразуются в офисы. |

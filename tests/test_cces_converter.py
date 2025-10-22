@@ -62,7 +62,7 @@ class TestCcesConverter(unittest.TestCase):
                     'fqdn': 'https://10.10.10.10:5443',
                     'software': 'CCE v1.23',
                     'availabilityzone': ['flix.dc_az.ru-moscow-1c'],
-                    'location': ['flix.dc.01'],
+                    'location': ['flix.dc.ru-moscow-1c'],
                     'service_mesh': 'istio',
                     'network_connection': ['flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
                     'management_networks': ['cidr.10_34_0_0_16'],

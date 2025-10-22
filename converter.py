@@ -20,6 +20,7 @@ from summary_reporter import generate_summary
 # Explicitly import converter modules
 from dc_region_converter import convert as dc_region_convert
 from dc_az_converter import convert as dc_az_convert
+from dc_converter import convert as dc_convert # Added DC converter
 from vpcs_converter import convert as vpcs_convert
 from subnets_converter import convert as subnets_convert
 from ecss_converter import convert as ecss_convert
@@ -41,6 +42,7 @@ from elbs_converter import convert as elbs_convert # Added ELB converter
 CONVERTERS = {
     'dc_region': dc_region_convert,
     'dc_az': dc_az_convert,
+    'dcs': dc_convert, # Added DC converter
     'vpcs': vpcs_convert,
     'subnets': subnets_convert,
     'ecss': ecss_convert,

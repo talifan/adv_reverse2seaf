@@ -61,6 +61,10 @@ def convert(source_data):
         az_refs = [find_dc_az_key(source_data, az_name) for az_name in dms_details.get('available_az', [])]
         az_refs = [ref for ref in az_refs if ref] # Filter out None values
 
+        # Resolve location (DC) based on available_az
+        location_refs = [f"flix.dc.{az_name}" for az_name in dms_details.get('available_az', []) if az_name]
+        location_refs = [ref for ref in location_refs if ref] # Filter out None values
+
         # Resolve network_connection (subnet_id)
         network_connection_refs = []
         subnet_id = dms_details.get('subnet_id')
@@ -76,7 +80,7 @@ def convert(source_data):
             'reservation_type': dms_details.get('type'),
             'service_type': 'Интеграционная шина  (MQ, ETL, API)', # Fixed value for DMS
             'availabilityzone': az_refs,
-            'location': [dms_details.get('DC')] if dms_details.get('DC') else [],
+            'location': location_refs,
             'network_connection': network_connection_refs,
         }
 
