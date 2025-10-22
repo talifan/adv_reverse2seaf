@@ -1,5 +1,7 @@
 # modules/dmss_converter.py
 
+from warning_reporter import collect_warning  # For collecting conversion warnings
+
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name, with robust validation."""
     if isinstance(az_name, str) and len(az_name) > 2: # Robust check for AZ name
@@ -57,20 +59,50 @@ def convert(source_data):
 
         description = '\n'.join(description_parts).strip()
 
-        # Resolve AZ references
-        az_refs = [find_dc_az_key(source_data, az_name) for az_name in dms_details.get('available_az', [])]
+        # Resolve AZ references with validation
+        available_az_raw = dms_details.get('available_az')
+        if available_az_raw is None:
+            collect_warning(dms_id, 'available_az', "Missing 'available_az'. Location will be empty.")
+            available_az_iter = []
+        elif isinstance(available_az_raw, str):
+            available_az_iter = [available_az_raw]
+        elif isinstance(available_az_raw, (list, tuple, set)):
+            available_az_iter = list(available_az_raw)
+        else:
+            collect_warning(dms_id, 'available_az', f"Invalid type '{type(available_az_raw).__name__}' for 'available_az'. Expected string or list.")
+            available_az_iter = []
+
+        valid_available_az = []
+        for az_name in available_az_iter:
+            if isinstance(az_name, str) and len(az_name) > 2:
+                valid_available_az.append(az_name)
+            else:
+                collect_warning(f"{dms_id}.available_az", 'value', f"Invalid AZ value '{az_name}'. Skipping.")
+
+        if available_az_iter and not valid_available_az:
+            collect_warning(dms_id, 'available_az', "No valid AZ values found. Location will be empty.")
+
+        az_refs = [find_dc_az_key(source_data, az_name) for az_name in valid_available_az]
         az_refs = [ref for ref in az_refs if ref] # Filter out None values
 
         # Resolve location (DC) based on available_az
-        location_refs = [f"flix.dc.{az_name}" for az_name in dms_details.get('available_az', []) if az_name]
+        location_refs = [f"flix.dc.{az_name}" for az_name in valid_available_az if az_name]
         location_refs = [ref for ref in location_refs if ref] # Filter out None values
 
         # Resolve network_connection (subnet_id)
         network_connection_refs = []
         subnet_id = dms_details.get('subnet_id')
+        if not subnet_id:
+            collect_warning(dms_id, 'subnet_id', "Missing or empty 'subnet_id'. network_connection will be empty.")
+        elif not isinstance(subnet_id, str):
+            collect_warning(dms_id, 'subnet_id', f"Invalid type '{type(subnet_id).__name__}' for 'subnet_id'. network_connection will be empty.")
+            subnet_id = None
         if subnet_id:
             network_connection_refs.append(find_network_key(source_data, subnet_id))
         network_connection_refs = [ref for ref in network_connection_refs if ref] # Filter out None values
+
+        if not dms_details.get('vpc_id'):
+            collect_warning(dms_id, 'vpc_id', "Missing 'vpc_id'. Ensure upstream segment references are available.")
 
         converted_clusters[new_id] = {
             'title': dms_details.get('name'),

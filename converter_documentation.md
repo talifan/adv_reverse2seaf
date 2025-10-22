@@ -68,7 +68,7 @@ entities_to_convert:
 | `vaults`                     | `seaf.ta.services.storage` и `seaf.ta.services.backup` | Хранилища резервных копий преобразуются в сущности хранения и отдельные сущности резервных копий. |
 | `vpn_gateways`               | `seaf.ta.components.network` | VPN-шлюзы преобразуются в сетевые устройства типа "VPN" с `location`, рассчитанным по AZ подключённой подсети. |
 | `vpn_connections`            | `seaf.ta.services.network_links` | VPN-соединения преобразуются в сетевые связи. |
-| `eips`                       | `seaf.ta.services.network`, `seaf.ta.services.network_links` | Elastic IP преобразуются в сети типа "WAN" и создают сетевые связи к внутренним ресурсам по `int_address`. |
+| `eips`                       | `seaf.ta.services.network`, `seaf.ta.services.network_links`, `seaf.ta.services.network_segment` | Elastic IP преобразуются в сети типа "WAN", подключаются к интернет-сегментам по каждому ЦОДу и создают сетевые связи к внутренним ресурсам по `int_address`. |
 | `dmss`                       | `seaf.ta.services.cluster`   | Сервисы сообщений преобразуются в кластеры типа "Интеграционная шина". |
 | `security_groups`            | `seaf.ta.services.kb`        | Группы безопасности преобразуются в сущности Базы знаний (KB) с тегом "FW". |
 | `branches`                   | `seaf.ta.services.office`    | Филиалы преобразуются в офисы. |

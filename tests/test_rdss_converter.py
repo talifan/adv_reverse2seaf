@@ -2,10 +2,12 @@ import unittest
 import sys
 import os
 
-# Add modules to the python path
+# Add modules and utils to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
 from rdss_converter import convert
+from warning_reporter import get_collected_warnings, clear_collected_warnings
 
 class TestRdssConverter(unittest.TestCase):
 
@@ -85,12 +87,55 @@ class TestRdssConverter(unittest.TestCase):
         }
 
         # Run the conversion
+        clear_collected_warnings()
         converted_data = convert(source_data)
-
-        print(converted_data)
 
         # Assert that the result is as expected
         self.assertEqual(converted_data, expected_output)
+        self.assertEqual(get_collected_warnings(), [])
+        clear_collected_warnings()
+
+    def test_convert_rdss_warnings(self):
+        source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.rdss': {
+                'flix.rdss.invalid': {
+                    'id': 'invalid',
+                    'name': 'invalid-rds',
+                    'nodes': [],
+                    'subnet_id': '',
+                    # vpc_id intentionally omitted
+                }
+            }
+        }
+
+        expected_output = {
+            'seaf.ta.services.cluster': {
+                'flix.rdss.invalid': {
+                    'title': 'invalid-rds',
+                    'description': '',
+                    'external_id': 'invalid',
+                    'fqdn': None,
+                    'reservation_type': None,
+                    'service_type': 'СУБД',
+                    'availabilityzone': [],
+                    'location': [],
+                    'network_connection': []
+                }
+            }
+        }
+
+        clear_collected_warnings()
+        converted_data = convert(source_data)
+        self.assertEqual(converted_data, expected_output)
+        self.assertEqual(
+            get_collected_warnings(),
+            [
+                "WARNING: Entity 'flix.rdss.invalid' - Field 'nodes': Missing or empty 'nodes'. Availability zone and location will be empty.",
+                "WARNING: Entity 'flix.rdss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty.",
+                "WARNING: Entity 'flix.rdss.invalid' - Field 'vpc_id': Missing 'vpc_id'. Ensure upstream segment references are available."
+            ]
+        )
+        clear_collected_warnings()
 
 if __name__ == '__main__':
     unittest.main()

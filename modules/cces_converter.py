@@ -1,5 +1,7 @@
 # modules/cces_converter.py
 
+from warning_reporter import collect_warning  # For collecting conversion warnings
+
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name."""
     return f"flix.dc_az.{az_name}" if az_name else None
@@ -47,13 +49,40 @@ def convert(source_data):
 
         description = '\n'.join(description_parts).strip()
 
-        # Resolve AZ references
-        az_refs = [find_dc_az_key(source_data, az_name) for az_name in cce_details.get('masters_az', [])]
+        # Resolve AZ references with validation
+        masters_az_raw = cce_details.get('masters_az')
+        masters_az_values = []
+        if masters_az_raw is None:
+            collect_warning(cce_id, 'masters_az', "Missing 'masters_az'. Location will be empty.")
+            masters_az_iterable = []
+        elif isinstance(masters_az_raw, str):
+            masters_az_iterable = [masters_az_raw]
+        elif isinstance(masters_az_raw, (list, tuple, set)):
+            masters_az_iterable = list(masters_az_raw)
+        else:
+            collect_warning(cce_id, 'masters_az', f"Invalid type '{type(masters_az_raw).__name__}' for 'masters_az'. Expected string or list.")
+            masters_az_iterable = []
+
+        for az_name in masters_az_iterable:
+            if isinstance(az_name, str) and len(az_name) > 2:
+                masters_az_values.append(az_name)
+            else:
+                collect_warning(f"{cce_id}.masters_az", 'value', f"Invalid AZ value '{az_name}'. Skipping.")
+
+        if masters_az_iterable and not masters_az_values:
+            collect_warning(cce_id, 'masters_az', "No valid AZ values found. Location will be empty.")
+
+        az_refs = [find_dc_az_key(source_data, az_name) for az_name in masters_az_values]
         az_refs = [ref for ref in az_refs if ref] # Filter out None values
 
         # Resolve network_connection (subnet_id)
         network_connection_refs = []
         subnet_id = cce_details.get('subnet_id')
+        if not subnet_id:
+            collect_warning(cce_id, 'subnet_id', "Missing or empty 'subnet_id'. network_connection will be empty.")
+        elif not isinstance(subnet_id, str):
+            collect_warning(cce_id, 'subnet_id', f"Invalid type '{type(subnet_id).__name__}' for 'subnet_id'. network_connection will be empty.")
+            subnet_id = None
         if subnet_id:
             network_connection_refs.append(find_network_key(source_data, subnet_id))
         network_connection_refs = [ref for ref in network_connection_refs if ref]
@@ -74,7 +103,7 @@ def convert(source_data):
         auth_ref = find_kb_key(source_data, cce_details.get('authentication'), "IdP") # Assuming IdP tag for authentication
 
         # Resolve location (DC) based on masters_az
-        location_refs = [f"flix.dc.{az_name}" for az_name in cce_details.get('masters_az', []) if az_name]
+        location_refs = [f"flix.dc.{az_name}" for az_name in masters_az_values]
         location_refs = [ref for ref in location_refs if ref] # Filter out None values
 
         converted_k8s_clusters[new_id] = {

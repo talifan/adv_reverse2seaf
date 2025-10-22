@@ -2,11 +2,27 @@ import unittest
 import sys
 import os
 
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+# Debug prints
+print(f"__file__: {__file__}")
+print(f"os.path.dirname(__file__): {os.path.dirname(__file__)}")
+print(f"os.path.join(os.path.dirname(__file__), '..', 'modules'): {os.path.join(os.path.dirname(__file__), '..', 'modules')}")
+print(f"os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')): {os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules'))}")
+print(f"os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')): {os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))}")
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+
+print(f"sys.path after append: {sys.path}")
 
 from dc_converter import convert
+from warning_reporter import get_collected_warnings, clear_collected_warnings # Import for testing warnings
 
 class TestDcConverter(unittest.TestCase):
+
+    def setUp(self):
+        clear_collected_warnings() # Clear warnings before each test
+
     def test_convert_dcs_from_azs(self):
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {
@@ -16,6 +32,9 @@ class TestDcConverter(unittest.TestCase):
                 },
                 'ecs2': {
                     'az': 'c' # Invalid single character
+                },
+                'ecs3': {
+                    'az': None # Missing AZ
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.cces': {
@@ -74,6 +93,14 @@ class TestDcConverter(unittest.TestCase):
         }
         converted_data = convert(source_data)
         self.assertEqual(converted_data, expected_output)
+
+        # Assert warnings
+        warnings = get_collected_warnings()
+        self.assertIn("WARNING: Entity 'ecs2' - Field 'az': Invalid AZ name 'c' (too short). Skipping.", warnings)
+        self.assertIn("WARNING: Entity 'cce1' - Field 'masters_az': Invalid AZ name 'inv' (too short) in list. Skipping.", warnings)
+        self.assertIn("WARNING: Entity 'dms1' - Field 'available_az': Invalid AZ entry 'None' (not a string) in list. Skipping.", warnings)
+        self.assertIn("WARNING: Entity 'dms1' - Field 'available_az': Invalid AZ entry '123' (not a string) in list. Skipping.", warnings)
+        self.assertEqual(len(warnings), 4)
 
 if __name__ == '__main__':
     unittest.main()

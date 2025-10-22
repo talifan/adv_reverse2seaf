@@ -2,10 +2,12 @@ import unittest
 import sys
 import os
 
-# Add modules to the python path
+# Add modules and utils to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
 from cces_converter import convert
+from warning_reporter import get_collected_warnings, clear_collected_warnings
 
 class TestCcesConverter(unittest.TestCase):
 
@@ -85,10 +87,69 @@ class TestCcesConverter(unittest.TestCase):
         }
 
         # Run the conversion
+        clear_collected_warnings()
         converted_data = convert(source_data)
 
         # Assert that the result is as expected
         self.assertEqual(converted_data, expected_output)
+        self.assertEqual(get_collected_warnings(), [])
+        clear_collected_warnings()
+
+    def test_convert_cces_warnings(self):
+        source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.cces': {
+                'flix.cces.invalid': {
+                    'id': 'invalid',
+                    'name': 'invalid-cluster',
+                    'masters_az': 'ru',  # invalid (too short)
+                    'subnet_id': None
+                }
+            }
+        }
+
+        expected_output = {
+            'seaf.ta.services.k8s': {
+                'flix.cces.invalid': {
+                    'title': 'invalid-cluster',
+                    'description': '',
+                    'external_id': 'invalid',
+                    'fqdn': None,
+                    'software': None,
+                    'availabilityzone': [],
+                    'location': [],
+                    'service_mesh': None,
+                    'network_connection': [],
+                    'management_networks': [],
+                    'auth': None,
+                    'is_own': None,
+                    'cni': None,
+                    'cluster_autoscaler': None,
+                    'keys': None,
+                    'idm': None,
+                    'policy': None,
+                    'pam': None,
+                    'ca': None,
+                    'audit': None,
+                    'audit_policy': None,
+                    'monitoring': [],
+                    'backup': [],
+                    'registries': []
+                }
+            }
+        }
+
+        clear_collected_warnings()
+        converted_data = convert(source_data)
+        self.assertEqual(converted_data, expected_output)
+        self.assertEqual(
+            get_collected_warnings(),
+            [
+                "WARNING: Entity 'flix.cces.invalid.masters_az' - Field 'value': Invalid AZ value 'ru'. Skipping.",
+                "WARNING: Entity 'flix.cces.invalid' - Field 'masters_az': No valid AZ values found. Location will be empty.",
+                "WARNING: Entity 'flix.cces.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty."
+            ]
+        )
+        clear_collected_warnings()
 
 if __name__ == '__main__':
     unittest.main()

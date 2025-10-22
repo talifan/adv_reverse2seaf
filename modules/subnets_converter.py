@@ -42,7 +42,6 @@ def convert(source_data):
             'external_id': subnet_details.get('id'),
             'type': network_type,
             'ipnetwork': subnet_details.get('cidr'),
-            'location': [subnet_details.get('DC')] if subnet_details.get('DC') else [],
             'segment': [vpc_key] if vpc_key else []
         }
 

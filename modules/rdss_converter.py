@@ -1,5 +1,7 @@
 # modules/rdss_converter.py
 
+from warning_reporter import collect_warning  # For collecting conversion warnings
+
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name, with robust validation."""
     if isinstance(az_name, str) and len(az_name) > 2: # Robust check for AZ name
@@ -71,13 +73,27 @@ def convert(source_data):
 
         description = '\n'.join(description_parts).strip()
 
-        # Collect AZs from nodes
+        # Collect AZs from nodes with validation
         unique_node_azs = set()
-        nodes = rds_details.get('nodes', [])
-        for node in nodes:
+        nodes_raw = rds_details.get('nodes')
+        if not nodes_raw:
+            collect_warning(rds_id, 'nodes', "Missing or empty 'nodes'. Availability zone and location will be empty.")
+            nodes_iterable = []
+        elif not isinstance(nodes_raw, list):
+            collect_warning(rds_id, 'nodes', f"Invalid type '{type(nodes_raw).__name__}' for 'nodes'. Expected list.")
+            nodes_iterable = []
+        else:
+            nodes_iterable = nodes_raw
+
+        for index, node in enumerate(nodes_iterable):
+            if not isinstance(node, dict):
+                collect_warning(f"{rds_id}.nodes[{index}]", 'value', f"Invalid node type '{type(node).__name__}'. Expected dictionary.")
+                continue
             node_az = node.get('availability_zone')
             if isinstance(node_az, str) and len(node_az) > 2:
                 unique_node_azs.add(node_az)
+            else:
+                collect_warning(f"{rds_id}.nodes[{index}]", 'availability_zone', f"Missing or invalid 'availability_zone' value '{node_az}'. Skipping.")
 
         # Resolve AZ references from collected node AZs
         az_refs = [find_dc_az_key(source_data, az_name) for az_name in sorted(list(unique_node_azs))]
@@ -90,9 +106,17 @@ def convert(source_data):
         # Resolve network_connection (subnet_id)
         network_connection_refs = []
         subnet_id = rds_details.get('subnet_id')
+        if not subnet_id:
+            collect_warning(rds_id, 'subnet_id', "Missing or empty 'subnet_id'. network_connection will be empty.")
+        elif not isinstance(subnet_id, str):
+            collect_warning(rds_id, 'subnet_id', f"Invalid type '{type(subnet_id).__name__}' for 'subnet_id'. network_connection will be empty.")
+            subnet_id = None
         if subnet_id:
             network_connection_refs.append(find_network_key(source_data, subnet_id))
         network_connection_refs = [ref for ref in network_connection_refs if ref] # Filter out None values
+
+        if not rds_details.get('vpc_id'):
+            collect_warning(rds_id, 'vpc_id', "Missing 'vpc_id'. Ensure upstream segment references are available.")
 
         converted_clusters[new_id] = {
             'title': rds_details.get('name'),

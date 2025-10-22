@@ -23,7 +23,8 @@ class TestEipsConverter(unittest.TestCase):
                     'id': 'subnet-prod-id',
                     'name': 'subnet-Prod',
                     'cidr': '10.1.1.0/24',
-                    'vpc': 'vpc-internal-id'
+                    'vpc': 'vpc-internal-id',
+                    'availability_zone': 'ru-moscow-1a'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {
@@ -70,8 +71,8 @@ class TestEipsConverter(unittest.TestCase):
                     'external_id': 'public-eip-id',
                     'type': 'WAN',
                     'wan_ip': '8.8.8.8',
-                    'segment': 'flix.network_segment.internet', # Should point to internet
-                    'location': ['flix.dc.01'],
+                    'segment': ['flix.network_segment.internet.dc_ru_moscow_1a'],
+                    'location': ['flix.dc.ru-moscow-1a'],
                     'provider': 'Cloud.ru'
                 },
                 'flix.eips.private-eip-id': {
@@ -80,18 +81,19 @@ class TestEipsConverter(unittest.TestCase):
                     'external_id': 'private-eip-id',
                     'type': 'WAN',
                     'wan_ip': '192.168.1.100',
-                    'segment': 'flix.vpcs.vpc-internal-id', # Should use the regular lookup
-                    'location': ['flix.dc.01'],
+                    'segment': ['flix.vpcs.vpc-internal-id'],
+                    'location': ['flix.dc.ru-moscow-1a'],
                     'provider': 'Cloud.ru'
                 }
             },
             'seaf.ta.services.network_segment': {
-                'flix.network_segment.internet': {
+                'flix.network_segment.internet.dc_ru_moscow_1a': {
                     'title': 'Public Internet',
-                    'description': 'Logical segment for all public-facing IP addresses.',
-                    'external_id': 'internet_segment',
+                    'description': 'Internet segment for flix.dc.ru-moscow-1a',
+                    'external_id': 'internet_segment_dc_ru_moscow_1a',
                     'sber': {
-                        'zone': 'INTERNET'
+                        'zone': 'INTERNET',
+                        'location': 'flix.dc.ru-moscow-1a'
                     }
                 }
             },

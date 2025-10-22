@@ -2,10 +2,12 @@ import unittest
 import sys
 import os
 
-# Add modules to the python path
+# Add modules and utils to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
 from dmss_converter import convert
+from warning_reporter import get_collected_warnings, clear_collected_warnings
 
 class TestDmssConverter(unittest.TestCase):
 
@@ -73,10 +75,57 @@ class TestDmssConverter(unittest.TestCase):
         }
 
         # Run the conversion
+        clear_collected_warnings()
         converted_data = convert(source_data)
 
         # Assert that the result is as expected
         self.assertEqual(converted_data, expected_output)
+        self.assertEqual(get_collected_warnings(), [])
+        clear_collected_warnings()
+
+    def test_convert_dmss_warnings(self):
+        source_data = {
+            'seaf.ta.reverse.cloud_ru.advanced.dmss': {
+                'flix.dmss.invalid': {
+                    'id': 'invalid',
+                    'name': 'invalid-dms',
+                    'available_az': ['ru', 123],
+                    'subnet_id': '',
+                    # vpc_id intentionally omitted
+                }
+            }
+        }
+
+        expected_output = {
+            'seaf.ta.services.cluster': {
+                'flix.dmss.invalid': {
+                    'title': 'invalid-dms',
+                    'description': '',
+                    'external_id': 'invalid',
+                    'fqdn': None,
+                    'reservation_type': None,
+                    'service_type': 'Интеграционная шина  (MQ, ETL, API)',
+                    'availabilityzone': [],
+                    'location': [],
+                    'network_connection': []
+                }
+            }
+        }
+
+        clear_collected_warnings()
+        converted_data = convert(source_data)
+        self.assertEqual(converted_data, expected_output)
+        self.assertEqual(
+            get_collected_warnings(),
+            [
+                "WARNING: Entity 'flix.dmss.invalid.available_az' - Field 'value': Invalid AZ value 'ru'. Skipping.",
+                "WARNING: Entity 'flix.dmss.invalid.available_az' - Field 'value': Invalid AZ value '123'. Skipping.",
+                "WARNING: Entity 'flix.dmss.invalid' - Field 'available_az': No valid AZ values found. Location will be empty.",
+                "WARNING: Entity 'flix.dmss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty.",
+                "WARNING: Entity 'flix.dmss.invalid' - Field 'vpc_id': Missing 'vpc_id'. Ensure upstream segment references are available."
+            ]
+        )
+        clear_collected_warnings()
 
 if __name__ == '__main__':
     unittest.main()
