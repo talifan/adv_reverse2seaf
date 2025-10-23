@@ -82,15 +82,13 @@ def main():
     args = parser.parse_args()
 
     # 2. Load Configuration
-    config_path = Path(script_dir) / args.config # Resolve config path relative to script_dir
+    config_path = Path(script_dir) / args.config  # Resolve config path relative to script_dir
     config = load_config(config_path)
 
     # 3. Merge CLI arguments with config file (CLI overrides config)
-    # Define project_root as 4 levels up from the script directory
-    project_root = Path(script_dir).parents[2]
-    # Resolve input_dir and output_dir relative to project_root
-    input_dir = project_root / (args.input_dir or config.get('input_dir', 'architecture/ta/reverse/cloud.ru/advanced/'))
-    output_dir = project_root / (args.output_dir or config.get('output_dir', 'architecture/ta/converted/'))
+    base_dir = Path.cwd()
+    input_dir = Path(args.input_dir or config.get('input_dir') or base_dir)
+    output_dir = Path(args.output_dir or config.get('output_dir') or base_dir)
     
     # CLI entities list overrides config if provided
     if args.entities:
@@ -210,4 +208,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

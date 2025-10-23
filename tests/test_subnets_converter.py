@@ -42,7 +42,6 @@ class TestSubnetsConverter(unittest.TestCase):
                     'external_id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
                     'type': 'LAN',
                     'ipnetwork': '10.10.0.0/24',
-                    'location': ['flix.dc.01'],
                     'segment': ['flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90'],
                     'lan_type': 'Проводная'
                 }

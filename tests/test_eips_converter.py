@@ -72,7 +72,6 @@ class TestEipsConverter(unittest.TestCase):
                     'type': 'WAN',
                     'wan_ip': '8.8.8.8',
                     'segment': ['flix.network_segment.internet.dc_ru_moscow_1a'],
-                    'location': ['flix.dc.ru-moscow-1a'],
                     'provider': 'Cloud.ru'
                 },
                 'flix.eips.private-eip-id': {
@@ -82,7 +81,6 @@ class TestEipsConverter(unittest.TestCase):
                     'type': 'WAN',
                     'wan_ip': '192.168.1.100',
                     'segment': ['flix.vpcs.vpc-internal-id'],
-                    'location': ['flix.dc.ru-moscow-1a'],
                     'provider': 'Cloud.ru'
                 }
             },

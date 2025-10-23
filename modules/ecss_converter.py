@@ -45,9 +45,28 @@ def convert(source_data):
             description_parts.append(f"IP Addresses: {', '.join(ecs_details.get('addresses'))}")
         if ecs_details.get('security_groups'):
             description_parts.append(f"Security Groups: {', '.join(ecs_details.get('security_groups'))}")
-        if ecs_details.get('tags'):
-            tags_str = ', '.join([f"{tag['key']}:{tag['value']}" for tag in ecs_details.get('tags')])
-            description_parts.append(f"Tags: {tags_str}")
+        tags_data = ecs_details.get('tags')
+        if tags_data:
+            tag_entries = []
+            if isinstance(tags_data, list):
+                for index, tag_item in enumerate(tags_data):
+                    if isinstance(tag_item, dict):
+                        key = tag_item.get('key')
+                        value = tag_item.get('value')
+                        if key is None or value is None:
+                            collect_warning(f"{ecs_id}.tags[{index}]", 'value', "Missing 'key' or 'value' in tag dictionary. Skipping.")
+                            continue
+                        tag_entries.append(f"{key}:{value}")
+                    elif isinstance(tag_item, str):
+                        tag_entries.append(tag_item)
+                    else:
+                        collect_warning(f"{ecs_id}.tags[{index}]", 'value', f"Unsupported tag type '{type(tag_item).__name__}'. Skipping.")
+            elif isinstance(tags_data, str):
+                tag_entries.append(tags_data)
+            else:
+                collect_warning(ecs_id, 'tags', f"Unsupported tags type '{type(tags_data).__name__}'. Skipping tags.")
+            if tag_entries:
+                description_parts.append(f"Tags: {', '.join(tag_entries)}")
         if ecs_details.get('tenant'):
             description_parts.append(f"Tenant: {ecs_details.get('tenant')}")
         if ecs_details.get('DC'):

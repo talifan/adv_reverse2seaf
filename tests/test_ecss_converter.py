@@ -57,7 +57,8 @@ class TestEcssConverter(unittest.TestCase):
                     ],
                     'tags': [
                         {'key': 'AS_Name', 'value': 'SomewhatAS'},
-                        {'key': 'Service_Name', 'value': 'Application Server'}
+                        {'key': 'Service_Name', 'value': 'Application Server'},
+                        'system: example.systems.1c.example.com'
                     ],
                     'security_groups': ['0fdb3e4f-c7a6-42eb-9531-552ac5006202'],
                     'type': 'vm',
@@ -125,7 +126,7 @@ class TestEcssConverter(unittest.TestCase):
             'seaf.ta.components.server': {
                 'flix.ecss.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
                     'title': 'ecs-prod-someserver1',
-                    'description': 'Example server description\nFlavor: s7n.large.2\nIP Addresses: 10.10.0.51\nSecurity Groups: 0fdb3e4f-c7a6-42eb-9531-552ac5006202\nTags: AS_Name:SomewhatAS, Service_Name:Application Server\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01',
+                    'description': 'Example server description\nFlavor: s7n.large.2\nIP Addresses: 10.10.0.51\nSecurity Groups: 0fdb3e4f-c7a6-42eb-9531-552ac5006202\nTags: AS_Name:SomewhatAS, Service_Name:Application Server, system: example.systems.1c.example.com\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01',
                     'external_id': 'e5e60a69-0653-4297-8799-ea0df4f0cacc',
                     'type': 'Виртуальный',
                     'fqdn': 'ecs-prod-someserver1',
