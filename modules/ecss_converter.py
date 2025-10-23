@@ -1,28 +1,23 @@
 # modules/ecss_converter.py
 
 from warning_reporter import collect_warning # Import for collecting warnings
+from id_prefix import ensure_prefix, dc_az_ref, subnet_ref, build_id, dc_ref
+
 
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name."""
-    # In a real scenario, we would have a mapping or a way to look up DC AZs
-    # For now, we'll assume a direct mapping if the name is simple, or return None
-    # based on the example data, DC AZs are like 'ru-moscow-1a'
-    # and the target schema expects a reference like 'flix.dc_az.ru-moscow-1a'
-    return f"flix.dc_az.{az_name}" if az_name else None
+    return dc_az_ref(az_name) if az_name else None
 
 def find_network_key(source_data, subnet_id):
     """Finds the full key for a Network from its subnet ID."""
-    # This assumes that the subnet_id in ecss directly maps to the external_id of a converted network
-    # which is the original subnet_id.
-    # So, if a subnet with id '0d9f37b6-0889-4763-8cf3-20d9641af0c1' was converted to 'flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'
-    # then we can construct the key.
-    return f"flix.subnets.{subnet_id}" if subnet_id else None
+    return subnet_ref(subnet_id) if subnet_id else None
 
 
 def convert(source_data):
     """
     Converts ECS (Elastic Cloud Server) data to seaf.ta.components.server format.
     """
+    ensure_prefix(source_data=source_data)
     ecss_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.ecss', {})
     
     converted_servers = {}
@@ -69,8 +64,6 @@ def convert(source_data):
                 description_parts.append(f"Tags: {', '.join(tag_entries)}")
         if ecs_details.get('tenant'):
             description_parts.append(f"Tenant: {ecs_details.get('tenant')}")
-        if ecs_details.get('DC'):
-            description_parts.append(f"DC: {ecs_details.get('DC')}")
 
         description = '\n'.join(description_parts).strip()
 
@@ -139,7 +132,7 @@ def convert(source_data):
             collect_warning(ecs_id, 'az', f"Invalid AZ name '{az_name}' (not a string or too short). Location will be empty.")
         else:
             az_ref = find_dc_az_key(source_data, az_name)
-            location_ref = [f"flix.dc.{az_name}"]
+            location_ref = [dc_ref(az_name)]
 
         subnet_refs = [find_network_key(source_data, s_id) for s_id in ecs_details.get('subnets', [])]
         subnet_refs = [ref for ref in subnet_refs if ref]
@@ -185,7 +178,7 @@ def convert(source_data):
             'az': [az_ref] if az_ref else [],
             'location': location_ref,
             'subnets': subnet_refs,
-            'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+            'virtualization': build_id('cluster_virtualization', 'cloud_ru_virtualization_cluster')
         }
 
     return {'seaf.ta.components.server': converted_servers}

@@ -15,8 +15,11 @@ sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
 print(f"sys.path after append: {sys.path}")
 
+from id_prefix import set_prefix
 from dc_converter import convert
 from warning_reporter import get_collected_warnings, clear_collected_warnings # Import for testing warnings
+
+set_prefix('tenant')
 
 class TestDcConverter(unittest.TestCase):
 
@@ -49,45 +52,45 @@ class TestDcConverter(unittest.TestCase):
         }
         expected_output = {
             'seaf.ta.services.dc': {
-                'flix.dc.ru-moscow-1a': {
+                'tenant.dc.ru-moscow-1a': {
                     'title': 'ru-moscow-1a',
                     'external_id': 'ru-moscow-1a',
                     'type': 'Облачный',
                     'vendor': 'Cloud.ru',
                     'address': 'ru-moscow-1a',
-                    'availabilityzone': 'flix.dc_az.ru-moscow-1a'
+                    'availabilityzone': 'tenant.dc_az.ru-moscow-1a'
                 },
-                'flix.dc.ru-moscow-1b': {
+                'tenant.dc.ru-moscow-1b': {
                     'title': 'ru-moscow-1b',
                     'external_id': 'ru-moscow-1b',
                     'type': 'Облачный',
                     'vendor': 'Cloud.ru',
                     'address': 'ru-moscow-1b',
-                    'availabilityzone': 'flix.dc_az.ru-moscow-1b'
+                    'availabilityzone': 'tenant.dc_az.ru-moscow-1b'
                 },
-                'flix.dc.ru-moscow-1c': {
+                'tenant.dc.ru-moscow-1c': {
                     'title': 'ru-moscow-1c',
                     'external_id': 'ru-moscow-1c',
                     'type': 'Облачный',
                     'vendor': 'Cloud.ru',
                     'address': 'ru-moscow-1c',
-                    'availabilityzone': 'flix.dc_az.ru-moscow-1c'
+                    'availabilityzone': 'tenant.dc_az.ru-moscow-1c'
                 },
-                'flix.dc.ru-moscow-1d': {
+                'tenant.dc.ru-moscow-1d': {
                     'title': 'ru-moscow-1d',
                     'external_id': 'ru-moscow-1d',
                     'type': 'Облачный',
                     'vendor': 'Cloud.ru',
                     'address': 'ru-moscow-1d',
-                    'availabilityzone': 'flix.dc_az.ru-moscow-1d'
+                    'availabilityzone': 'tenant.dc_az.ru-moscow-1d'
                 },
-                'flix.dc.ru-moscow-1e': {
+                'tenant.dc.ru-moscow-1e': {
                     'title': 'ru-moscow-1e',
                     'external_id': 'ru-moscow-1e',
                     'type': 'Облачный',
                     'vendor': 'Cloud.ru',
                     'address': 'ru-moscow-1e',
-                    'availabilityzone': 'flix.dc_az.ru-moscow-1e'
+                    'availabilityzone': 'tenant.dc_az.ru-moscow-1e'
                 }
             }
         }

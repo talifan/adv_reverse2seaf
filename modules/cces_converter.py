@@ -1,21 +1,22 @@
 # modules/cces_converter.py
 
 from warning_reporter import collect_warning  # For collecting conversion warnings
+from id_prefix import get_prefix, build_id
 
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name."""
-    return f"flix.dc_az.{az_name}" if az_name else None
+    return build_id("dc_az", az_name) if az_name else None
 
 def find_network_key(source_data, subnet_id):
     """Finds the full key for a Network from its subnet ID."""
-    return f"flix.subnets.{subnet_id}" if subnet_id else None
+    return build_id("subnets", subnet_id) if subnet_id else None
 
 def find_kb_key(source_data, auth_type, tag):
     """Finds or constructs a key for a KB entity based on authentication type and tag."""
     # This is a simplification. In a real scenario, we might need to create the KB entity
     # if it doesn't exist, or have a more complex lookup.
     # For now, we'll construct a key based on the auth_type and tag.
-    return f"flix.kb.{tag.lower()}.{auth_type.lower()}" if auth_type and tag else None
+    return build_id("kb", f"{tag.lower()}", f"{auth_type.lower()}") if auth_type and tag else None
 
 
 def convert(source_data):
@@ -103,7 +104,7 @@ def convert(source_data):
         auth_ref = find_kb_key(source_data, cce_details.get('authentication'), "IdP") # Assuming IdP tag for authentication
 
         # Resolve location (DC) based on masters_az
-        location_refs = [f"flix.dc.{az_name}" for az_name in masters_az_values]
+        location_refs = [build_id("dc", az_name) for az_name in masters_az_values]
         location_refs = [ref for ref in location_refs if ref] # Filter out None values
 
         converted_k8s_clusters[new_id] = {

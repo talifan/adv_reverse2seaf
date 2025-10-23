@@ -16,6 +16,7 @@ sys.path.append(os.path.join(script_dir, 'modules'))
 
 from file_io import load_source_data, save_converted_data
 from summary_reporter import generate_summary
+from id_prefix import ensure_prefix
 
 # Explicitly import converter modules
 from dc_region_converter import convert as dc_region_convert
@@ -69,6 +70,10 @@ def load_config(config_path):
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
 
+def determine_prefix(source_data, override):
+    return ensure_prefix(prefix=override, source_data=source_data)
+
+
 def main():
     """Main function to run the conversion process."""
 
@@ -76,6 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description='Convert cloud architecture data to SEAF-core format.')
     parser.add_argument('--input-dir', type=str, help='Input directory with source files.')
     parser.add_argument('--output-dir', type=str, help='Output directory for converted files.')
+    parser.add_argument('--id-prefix', type=str, help='Identifier prefix to use for generated entity IDs (overrides config and auto detection).')
     parser.add_argument('--config', type=str, default='converter_config.yaml', help='Path to the configuration file.')
     parser.add_argument('entities', nargs='*', help='Specific entities to convert (e.g., vpcs subnets). Overrides config file.')
 
@@ -89,6 +95,7 @@ def main():
     base_dir = Path.cwd()
     input_dir = Path(args.input_dir or config.get('input_dir') or base_dir)
     output_dir = Path(args.output_dir or config.get('output_dir') or base_dir)
+    id_prefix_override = args.id_prefix or config.get('id_prefix')
     
     # CLI entities list overrides config if provided
     if args.entities:
@@ -108,6 +115,7 @@ def main():
     # 4. Load source data
     print("\nLoading source files...")
     source_data = load_source_data(input_dir)
+    determine_prefix(source_data, id_prefix_override)
     if not source_data:
         print("[ERROR] No source data loaded. Aborting.")
         return

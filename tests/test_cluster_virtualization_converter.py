@@ -5,7 +5,10 @@ import os
 # Add modules to the python path
 sys.path.append(os.path.abspath('../modules'))
 
+from id_prefix import set_prefix
 from cluster_virtualization_converter import convert
+
+set_prefix('tenant')
 
 class TestClusterVirtualizationConverter(unittest.TestCase):
 
@@ -29,20 +32,20 @@ class TestClusterVirtualizationConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.cluster_virtualization': {
-                'flix.cluster_virtualization.cloud_ru_virtualization_cluster': {
+                'tenant.cluster_virtualization.cloud_ru_virtualization_cluster': {
                     'title': 'Cloud.ru Virtualization Cluster',
                     'external_id': 'cloud_ru_virtualization_cluster',
                     'hypervisor': 'Cloud.ru Hypervisor',
                     'availabilityzone': [
-                        'flix.dc_az.ru-moscow-1a',
-                        'flix.dc_az.ru-moscow-1b',
-                        'flix.dc_az.ru-moscow-1c'
+                        'tenant.dc_az.ru-moscow-1a',
+                        'tenant.dc_az.ru-moscow-1b',
+                        'tenant.dc_az.ru-moscow-1c'
                     ],
                     'location': [],
                     'network_connection': [
-                        'flix.subnets.subnet-id-1',
-                        'flix.subnets.subnet-id-2',
-                        'flix.subnets.subnet-id-3'
+                        'tenant.subnets.subnet-id-1',
+                        'tenant.subnets.subnet-id-2',
+                        'tenant.subnets.subnet-id-3'
                     ],
                 }
             }

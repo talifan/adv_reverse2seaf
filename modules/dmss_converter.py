@@ -1,21 +1,23 @@
 # modules/dmss_converter.py
 
 from warning_reporter import collect_warning  # For collecting conversion warnings
+from id_prefix import ensure_prefix, dc_az_ref, subnet_ref, dc_ref
 
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name, with robust validation."""
-    if isinstance(az_name, str) and len(az_name) > 2: # Robust check for AZ name
-        return f"flix.dc_az.{az_name}" # Construct reference to the specific AZ
+    if isinstance(az_name, str) and len(az_name) > 2:
+        return dc_az_ref(az_name)
     return None
 
 def find_network_key(source_data, subnet_id):
     """Finds the full key for a Network from its subnet ID."""
-    return f"flix.subnets.{subnet_id}" if subnet_id else None
+    return subnet_ref(subnet_id) if subnet_id else None
 
 def convert(source_data):
     """
     Converts DMS (Distributed Message Services) data to seaf.ta.services.cluster format.
     """
+    ensure_prefix(source_data=source_data)
     dmss_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.dmss', {})
     
     converted_clusters = {}
@@ -54,8 +56,6 @@ def convert(source_data):
             description_parts.append(f"Disk Encrypted: {dms_details.get('disk_encrypted')}")
         if dms_details.get('tenant'):
             description_parts.append(f"Tenant: {dms_details.get('tenant')}")
-        if dms_details.get('DC'):
-            description_parts.append(f"DC: {dms_details.get('DC')}")
 
         description = '\n'.join(description_parts).strip()
 
@@ -86,7 +86,7 @@ def convert(source_data):
         az_refs = [ref for ref in az_refs if ref] # Filter out None values
 
         # Resolve location (DC) based on available_az
-        location_refs = [f"flix.dc.{az_name}" for az_name in valid_available_az if az_name]
+        location_refs = [dc_ref(az_name) for az_name in valid_available_az if az_name]
         location_refs = [ref for ref in location_refs if ref] # Filter out None values
 
         # Resolve network_connection (subnet_id)

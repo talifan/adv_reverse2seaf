@@ -1,21 +1,26 @@
 # modules/vpn_connections_converter.py
 
+from id_prefix import ensure_prefix, build_id
+def normalize_reference(identifier, default_type):
+    if not identifier or not isinstance(identifier, str):
+        return None
+    identifier = identifier.strip()
+    if '.' in identifier:
+        return identifier
+    return build_id(default_type, identifier)
+
+
 def find_vpn_gateway_key(source_data, gw_id):
     """Finds the full key for a VPN Gateway from its ID."""
-    # This assumes that the gw_id directly maps to the external_id of a converted network component
-    # which is the original gw_id.
-    return f"flix.vpn_gateways.{gw_id}" if gw_id else None
+    return normalize_reference(gw_id, 'vpn_gateways')
 
 def find_office_or_dc_key(source_data, branch_id):
     """Finds the full key for an Office or DC from its ID."""
-    # This is a simplification. In a real scenario, we would need to check both
-    # seaf.ta.services.office and seaf.ta.services.dc.
-    # For now, we'll assume a direct mapping if the ID is simple.
-    # The example data uses flix.office.hq and flix.dc.02
-    if branch_id.startswith('flix.office.'):
-        return branch_id
-    elif branch_id.startswith('flix.dc.'):
-        return branch_id
+    normalized = normalize_reference(branch_id, 'office')
+    if normalized and '.dc.' in normalized:
+        return normalized
+    if normalized:
+        return normalized
     return None
 
 
@@ -23,6 +28,7 @@ def convert(source_data):
     """
     Converts VPN Connections data to seaf.ta.services.logical_link format.
     """
+    ensure_prefix(source_data=source_data)
     vpn_connections_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.vpn_connections', {})
     
     converted_logical_links = {}

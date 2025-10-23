@@ -4,8 +4,12 @@ import os
 
 # Add modules to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from ecss_converter import convert
+
+set_prefix('tenant')
 
 class TestEcssConverter(unittest.TestCase):
 
@@ -13,13 +17,13 @@ class TestEcssConverter(unittest.TestCase):
         # Sample input data including VPCs and Subnets for linking
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
                     'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
                     'name': 'vpc-internal'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
-                'flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
+                'tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
                     'name': 'subnet-Prod',
                     'cidr': '10.10.0.0/24',
@@ -27,7 +31,7 @@ class TestEcssConverter(unittest.TestCase):
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {
-                'flix.ecss.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
+                'tenant.ecss.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
                     'id': 'e5e60a69-0653-4297-8799-ea0df4f0cacc',
                     'name': 'ecs-prod-someserver1',
                     'flavor': 's7n.large.2',
@@ -63,10 +67,10 @@ class TestEcssConverter(unittest.TestCase):
                     'security_groups': ['0fdb3e4f-c7a6-42eb-9531-552ac5006202'],
                     'type': 'vm',
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
-                    'DC': 'flix.dc.01',
+                    'DC': 'tenant.dc.01',
                     'description': 'Example server description'
                 },
-                'flix.ecss.test-server-units': {
+                'tenant.ecss.test-server-units': {
                     'id': 'test-server-units',
                     'name': 'ecs-test-units',
                     'os': {
@@ -89,7 +93,7 @@ class TestEcssConverter(unittest.TestCase):
                     'az': 'ru-moscow-1b',
                     'subnets': ['0d9f37b6-0889-4763-8cf3-20d9641af0c1']
                 },
-                'flix.ecss.test-server-float': {
+                'tenant.ecss.test-server-float': {
                     'id': 'test-server-float',
                     'name': 'ecs-test-float',
                     'cpu': {
@@ -105,7 +109,7 @@ class TestEcssConverter(unittest.TestCase):
                         }
                     ],
                 },
-                'flix.ecss.test-server-single-disk': {
+                'tenant.ecss.test-server-single-disk': {
                     'id': 'test-server-single-disk',
                     'name': 'ecs-test-single-disk',
                     'disks': [
@@ -124,9 +128,9 @@ class TestEcssConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.components.server': {
-                'flix.ecss.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
+                'tenant.ecss.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
                     'title': 'ecs-prod-someserver1',
-                    'description': 'Example server description\nFlavor: s7n.large.2\nIP Addresses: 10.10.0.51\nSecurity Groups: 0fdb3e4f-c7a6-42eb-9531-552ac5006202\nTags: AS_Name:SomewhatAS, Service_Name:Application Server, system: example.systems.1c.example.com\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01',
+                    'description': 'Example server description\nFlavor: s7n.large.2\nIP Addresses: 10.10.0.51\nSecurity Groups: 0fdb3e4f-c7a6-42eb-9531-552ac5006202\nTags: AS_Name:SomewhatAS, Service_Name:Application Server, system: example.systems.1c.example.com\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236',
                     'external_id': 'e5e60a69-0653-4297-8799-ea0df4f0cacc',
                     'type': 'Виртуальный',
                     'fqdn': 'ecs-prod-someserver1',
@@ -142,18 +146,18 @@ class TestEcssConverter(unittest.TestCase):
                     'nic_qty': 1,
                     'disks': [
                         {
-                            'az': 'flix.dc_az.ru-moscow-1a',
+                            'az': 'tenant.dc_az.ru-moscow-1a',
                             'size': 50,
                             'type': 'SAS',
                             'device': '/dev/vda'
                         }
                     ],
-                    'az': ['flix.dc_az.ru-moscow-1a'],
-                    'location': ['flix.dc.ru-moscow-1a'],
-                    'subnets': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
-                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                    'az': ['tenant.dc_az.ru-moscow-1a'],
+                    'location': ['tenant.dc.ru-moscow-1a'],
+                    'subnets': ['tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
+                    'virtualization': 'tenant.cluster_virtualization.cloud_ru_virtualization_cluster'
                 },
-                'flix.ecss.test-server-units': {
+                'tenant.ecss.test-server-units': {
                     'title': 'ecs-test-units',
                     'description': '',
                     'external_id': 'test-server-units',
@@ -177,12 +181,12 @@ class TestEcssConverter(unittest.TestCase):
                             'device': '/dev/vda'
                         }
                     ],
-                    'az': ['flix.dc_az.ru-moscow-1b'],
-                    'location': ['flix.dc.ru-moscow-1b'],
-                    'subnets': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
-                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                    'az': ['tenant.dc_az.ru-moscow-1b'],
+                    'location': ['tenant.dc.ru-moscow-1b'],
+                    'subnets': ['tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
+                    'virtualization': 'tenant.cluster_virtualization.cloud_ru_virtualization_cluster'
                 },
-                'flix.ecss.test-server-float': {
+                'tenant.ecss.test-server-float': {
                     'title': 'ecs-test-float',
                     'description': '',
                     'external_id': 'test-server-float',
@@ -209,9 +213,9 @@ class TestEcssConverter(unittest.TestCase):
                     'az': [],
                     'location': [],
                     'subnets': [],
-                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                    'virtualization': 'tenant.cluster_virtualization.cloud_ru_virtualization_cluster'
                 },
-                'flix.ecss.test-server-single-disk': {
+                'tenant.ecss.test-server-single-disk': {
                     'title': 'ecs-test-single-disk',
                     'description': '',
                     'external_id': 'test-server-single-disk',
@@ -238,7 +242,7 @@ class TestEcssConverter(unittest.TestCase):
                     'az': [],
                     'location': [],
                     'subnets': [],
-                    'virtualization': 'flix.cluster_virtualization.cloud_ru_virtualization_cluster'
+                    'virtualization': 'tenant.cluster_virtualization.cloud_ru_virtualization_cluster'
                 }
             }
         }

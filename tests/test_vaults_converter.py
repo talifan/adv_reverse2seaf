@@ -4,8 +4,12 @@ import os
 
 # Add modules to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from vaults_converter import convert
+
+set_prefix('tenant')
 
 class TestVaultsConverter(unittest.TestCase):
 
@@ -13,7 +17,7 @@ class TestVaultsConverter(unittest.TestCase):
         # Sample input data for vaults
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vaults': {
-                'flix.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c': {
+                'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c': {
                     'id': '25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c',
                     'name': 'Daily_Backups',
                     'description': 'Daily backup vault',
@@ -40,7 +44,7 @@ class TestVaultsConverter(unittest.TestCase):
                         }
                     ],
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 }
             }
         }
@@ -48,19 +52,19 @@ class TestVaultsConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.storage': {
-                'flix.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c': {
+                'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c': {
                     'title': 'Daily_Backups',
                     'description': 'Daily backup vault\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236',
                     'external_id': '25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c',
                     'type': 'Simple Storage Service', # Changed
                     'software': 'Cloud Backup Service',
                     'availabilityzone': [],
-                    'location': ['flix.dc.01'],
+                    'location': ['tenant.dc.01'],
                     'network_connection': [],
                     'sla': None,
                 }
             },            'seaf.ta.services.backup': {
-                'flix.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
+                'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
                     'title': 'Backup for ecs-prod-someserver1',
                     'description': 'Resource Name: ecs-prod-someserver1\nResource Type: OS::Nova::Server\nLimit Size: 440 GB\nCurrent Size: 0.0 GB\nBackup Count: 14\nProtect Status: available\nExtra Info: {}',
                     'external_id': 'e5e60a69-0653-4297-8799-ea0df4f0cacc',
@@ -68,10 +72,10 @@ class TestVaultsConverter(unittest.TestCase):
                     'replication': None,
                     'network_connection': [],
                     'availabilityzone': [],
-                    'location': ['flix.dc.01'],
-                    'storage': 'flix.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c'
+                    'location': ['tenant.dc.01'],
+                    'storage': 'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c'
                 },
-                'flix.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c.fb77c40e-b1e2-4aa5-89a9-45725b7ccf30': {
+                'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c.fb77c40e-b1e2-4aa5-89a9-45725b7ccf30': {
                     'title': 'Backup for ecs-prod-someserver2',
                     'description': 'Resource Name: ecs-prod-someserver2\nResource Type: OS::Nova::Server\nLimit Size: 50 GB\nCurrent Size: 0.0 GB\nBackup Count: 14\nProtect Status: available\nExtra Info: {}',
                     'external_id': 'fb77c40e-b1e2-4aa5-89a9-45725b7ccf30',
@@ -79,8 +83,8 @@ class TestVaultsConverter(unittest.TestCase):
                     'replication': None,
                     'network_connection': [],
                     'availabilityzone': [],
-                    'location': ['flix.dc.01'],
-                    'storage': 'flix.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c'
+                    'location': ['tenant.dc.01'],
+                    'storage': 'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c'
                 }
             }
         }

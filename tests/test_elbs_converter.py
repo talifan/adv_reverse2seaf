@@ -5,8 +5,12 @@ import json
 
 # Add modules to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from elbs_converter import convert
+
+set_prefix('tenant')
 
 class TestElbsConverter(unittest.TestCase):
 
@@ -14,23 +18,23 @@ class TestElbsConverter(unittest.TestCase):
         # Sample input data including Subnets and VPCs for linking
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
                     'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
                     'name': 'vpc-internal'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
-                'flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
+                'tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
                     'id': '6b2820d7-17c6-409a-91cb-b634cf596fdb',
                     'name': 'subnet-Test',
                     'cidr': '10.10.10.0/24',
                     'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
                     'availability_zone': 'ru-moscow-1a',
-                    'DC': 'flix.dc.ru-moscow-1a'
+                    'DC': 'tenant.dc.ru-moscow-1a'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.elbs': {
-                'flix.elbs.6d174721-db0e-4758-9a96-2f626e1a6632': {
+                'tenant.elbs.6d174721-db0e-4758-9a96-2f626e1a6632': {
                     'id': '6d174721-db0e-4758-9a96-2f626e1a6632',
                     'name': 'elb-ingress-test',
                     'description': 'Test ELB for ingress',
@@ -59,7 +63,7 @@ class TestElbsConverter(unittest.TestCase):
                     'tags': [],
                     'forwardingpolicy': [],
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 }
             }
         }
@@ -67,7 +71,7 @@ class TestElbsConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.components.network': {
-                'flix.elbs.6d174721-db0e-4758-9a96-2f626e1a6632': {
+                'tenant.elbs.6d174721-db0e-4758-9a96-2f626e1a6632': {
                     'title': 'elb-ingress-test',
                     'description': 'Test ELB for ingress\nInternal IP: 10.10.10.30\nOperating Status: ONLINE\nProvisioning Status: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nListeners: ' + json.dumps([
                         {
@@ -84,14 +88,14 @@ class TestElbsConverter(unittest.TestCase):
                             'lb_algorithm': 'ROUND_ROBIN',
                             'members': []
                         }
-                    ], indent=2) + '\nDC: flix.dc.ru-moscow-1a',
+                    ], indent=2) + '\nDC: tenant.dc.ru-moscow-1a',
                     'external_id': '6d174721-db0e-4758-9a96-2f626e1a6632',
                     'model': 'Cloud ELB',
                     'realization_type': 'Виртуальный',
                     'type': 'Маршрутизатор',
-                    'network_connection': ['flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
-                    'segment': 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'location': ['flix.dc.ru-moscow-1a'],
+                    'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
+                    'segment': 'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'location': ['tenant.dc.ru-moscow-1a'],
                     'address': '10.10.10.30'
                 }
             }

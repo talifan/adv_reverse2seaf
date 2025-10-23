@@ -1,5 +1,7 @@
 # modules/dc_az_converter.py
 
+from id_prefix import ensure_prefix, build_id
+
 def derive_region_from_az(az_name):
     """Derives the region name from an AZ name (e.g., 'ru-moscow-1c' -> 'ru-moscow-1')."""
     if az_name and len(az_name) > 1 and az_name[-1].isalpha():
@@ -10,6 +12,7 @@ def convert(source_data):
     """
     Collects unique AZs from various source entities and converts them to seaf.ta.services.dc_az format.
     """
+    ensure_prefix(source_data=source_data)
     unique_azs = set()
 
     # Collect AZs from ECSs
@@ -51,11 +54,11 @@ def convert(source_data):
     converted_dc_azs = {}
     for az_name in sorted(list(unique_azs)):
         # All AZs will reference the single 'Россия' region
-        region_ref = "flix.dc_region.russia"
+        region_ref = build_id('dc_region', 'russia')
 
         # Construct the new ID for the dc_az entity
-        # Example: ru-moscow-1c -> flix.dc_az.ru-moscow-1c
-        new_id = f"flix.dc_az.{az_name}"
+        # Example: ru-moscow-1c -> <prefix>.dc_az.ru-moscow-1c
+        new_id = build_id('dc_az', az_name)
 
         converted_dc_azs[new_id] = {
             'title': az_name,

@@ -5,8 +5,12 @@ import json
 
 # Add modules to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from security_groups_converter import convert
+
+set_prefix('tenant')
 
 class TestSecurityGroupsConverter(unittest.TestCase):
 
@@ -14,7 +18,7 @@ class TestSecurityGroupsConverter(unittest.TestCase):
         # Sample input data for Security Groups
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.security_groups': {
-                'flix.security_groups.0fdb3e4f-c7a6-42eb-9531-552ac5006202': {
+                'tenant.security_groups.0fdb3e4f-c7a6-42eb-9531-552ac5006202': {
                     'id': '0fdb3e4f-c7a6-42eb-9531-552ac5006202',
                     'name': 'sg-prod',
                     'description': 'blazing fast sg',
@@ -41,7 +45,7 @@ class TestSecurityGroupsConverter(unittest.TestCase):
                         }
                     ],
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 }
             }
         }
@@ -49,9 +53,9 @@ class TestSecurityGroupsConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.kb': {
-                'flix.security_groups.0fdb3e4f-c7a6-42eb-9531-552ac5006202': {
+                'tenant.security_groups.0fdb3e4f-c7a6-42eb-9531-552ac5006202': {
                     'title': 'sg-prod',
-                    'description': 'blazing fast sg\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: flix.dc.01\nRules: ' + json.dumps([
+                    'description': 'blazing fast sg\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: tenant.dc.01\nRules: ' + json.dumps([
                         {
                             'description': 'perfect rule 1',
                             'direction': 'ingress',

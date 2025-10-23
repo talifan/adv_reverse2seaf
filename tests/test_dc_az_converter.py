@@ -5,7 +5,10 @@ import os
 # Add modules to the python path
 sys.path.append(os.path.abspath('../modules'))
 
+from id_prefix import set_prefix
 from dc_az_converter import convert
+
+set_prefix('tenant')
 
 class TestDCAZConverter(unittest.TestCase):
 
@@ -33,41 +36,41 @@ class TestDCAZConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.dc_az': {
-                'flix.dc_az.ru-moscow-1a': {
+                'tenant.dc_az.ru-moscow-1a': {
                     'title': 'ru-moscow-1a',
                     'external_id': 'ru-moscow-1a',
                     'vendor': 'Cloud.ru',
-                    'region': 'flix.dc_region.russia'
+                    'region': 'tenant.dc_region.russia'
                 },
-                'flix.dc_az.ru-moscow-1b': {
+                'tenant.dc_az.ru-moscow-1b': {
                     'title': 'ru-moscow-1b',
                     'external_id': 'ru-moscow-1b',
                     'vendor': 'Cloud.ru',
-                    'region': 'flix.dc_region.russia'
+                    'region': 'tenant.dc_region.russia'
                 },
-                'flix.dc_az.ru-moscow-1c': {
+                'tenant.dc_az.ru-moscow-1c': {
                     'title': 'ru-moscow-1c',
                     'external_id': 'ru-moscow-1c',
                     'vendor': 'Cloud.ru',
-                    'region': 'flix.dc_region.russia'
+                    'region': 'tenant.dc_region.russia'
                 },
-                'flix.dc_az.ru-moscow-1d': {
+                'tenant.dc_az.ru-moscow-1d': {
                     'title': 'ru-moscow-1d',
                     'external_id': 'ru-moscow-1d',
                     'vendor': 'Cloud.ru',
-                    'region': 'flix.dc_region.russia'
+                    'region': 'tenant.dc_region.russia'
                 },
-                'flix.dc_az.ru-moscow-1e': {
+                'tenant.dc_az.ru-moscow-1e': {
                     'title': 'ru-moscow-1e',
                     'external_id': 'ru-moscow-1e',
                     'vendor': 'Cloud.ru',
-                    'region': 'flix.dc_region.russia'
+                    'region': 'tenant.dc_region.russia'
                 },
-                'flix.dc_az.ru-moscow-1f': {
+                'tenant.dc_az.ru-moscow-1f': {
                     'title': 'ru-moscow-1f',
                     'external_id': 'ru-moscow-1f',
                     'vendor': 'Cloud.ru',
-                    'region': 'flix.dc_region.russia'
+                    'region': 'tenant.dc_region.russia'
                 }
             }
         }

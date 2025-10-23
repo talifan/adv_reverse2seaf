@@ -5,7 +5,10 @@ import os
 # Add modules to the python path
 sys.path.append(os.path.abspath('../modules'))
 
+from id_prefix import set_prefix
 from dc_region_converter import convert
+
+set_prefix('tenant')
 
 class TestDCRegionConverter(unittest.TestCase):
 
@@ -33,7 +36,7 @@ class TestDCRegionConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.dc_region': {
-                'flix.dc_region.russia': {
+                'tenant.dc_region.russia': {
                     'title': 'Россия',
                     'external_id': 'russia',
                 }

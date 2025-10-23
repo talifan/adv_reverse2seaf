@@ -6,8 +6,11 @@ import os
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from cces_converter import convert
 from warning_reporter import get_collected_warnings, clear_collected_warnings
+
+set_prefix('tenant')
 
 class TestCcesConverter(unittest.TestCase):
 
@@ -15,13 +18,13 @@ class TestCcesConverter(unittest.TestCase):
         # Sample input data including VPCs and Subnets for linking
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
                     'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
                     'name': 'vpc-internal'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
-                'flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
+                'tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
                     'id': '6b2820d7-17c6-409a-91cb-b634cf596fdb',
                     'name': 'subnet-Test',
                     'cidr': '10.10.10.0/24',
@@ -29,7 +32,7 @@ class TestCcesConverter(unittest.TestCase):
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.cces': {
-                'flix.cces.a8350fe7-cfdd-11ed-9fc0-0255ac100088': {
+                'tenant.cces.a8350fe7-cfdd-11ed-9fc0-0255ac100088': {
                     'name': 'cce-test',
                     'id': 'a8350fe7-cfdd-11ed-9fc0-0255ac100088',
                     'alias': 'cce-dev',
@@ -49,7 +52,7 @@ class TestCcesConverter(unittest.TestCase):
                         {'url': 'https://10.10.10.10:5443', 'type': 'Internal'}
                     ],
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 }
             }
         }
@@ -57,18 +60,18 @@ class TestCcesConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.k8s': {
-                'flix.cces.a8350fe7-cfdd-11ed-9fc0-0255ac100088': {
+                'tenant.cces.a8350fe7-cfdd-11ed-9fc0-0255ac100088': {
                     'title': 'cce-test',
                     'description': 'Flavor: cce.s1.small\nPlatform Version: cce.8.0\nIP Addresses: 10.10.10.10\nSecurity Groups: 0fdb3e4f-c7a6-42eb-9531-552ac5006202\nContainer Network: 172.16.0.0/16\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nAlias: cce-dev',
                     'external_id': 'a8350fe7-cfdd-11ed-9fc0-0255ac100088',
                     'fqdn': 'https://10.10.10.10:5443',
                     'software': 'CCE v1.23',
-                    'availabilityzone': ['flix.dc_az.ru-moscow-1c'],
-                    'location': ['flix.dc.ru-moscow-1c'],
+                    'availabilityzone': ['tenant.dc_az.ru-moscow-1c'],
+                    'location': ['tenant.dc.ru-moscow-1c'],
                     'service_mesh': 'istio',
-                    'network_connection': ['flix.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
+                    'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
                     'management_networks': ['cidr.10_34_0_0_16'],
-                    'auth': 'flix.kb.idp.rbac',
+                    'auth': 'tenant.kb.idp.rbac',
                     'is_own': None,
                     'cni': None,
                     'cluster_autoscaler': None,
@@ -98,7 +101,7 @@ class TestCcesConverter(unittest.TestCase):
     def test_convert_cces_warnings(self):
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.cces': {
-                'flix.cces.invalid': {
+                'tenant.cces.invalid': {
                     'id': 'invalid',
                     'name': 'invalid-cluster',
                     'masters_az': 'ru',  # invalid (too short)
@@ -109,7 +112,7 @@ class TestCcesConverter(unittest.TestCase):
 
         expected_output = {
             'seaf.ta.services.k8s': {
-                'flix.cces.invalid': {
+                'tenant.cces.invalid': {
                     'title': 'invalid-cluster',
                     'description': '',
                     'external_id': 'invalid',
@@ -144,9 +147,9 @@ class TestCcesConverter(unittest.TestCase):
         self.assertEqual(
             get_collected_warnings(),
             [
-                "WARNING: Entity 'flix.cces.invalid.masters_az' - Field 'value': Invalid AZ value 'ru'. Skipping.",
-                "WARNING: Entity 'flix.cces.invalid' - Field 'masters_az': No valid AZ values found. Location will be empty.",
-                "WARNING: Entity 'flix.cces.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty."
+                "WARNING: Entity 'tenant.cces.invalid.masters_az' - Field 'value': Invalid AZ value 'ru'. Skipping.",
+                "WARNING: Entity 'tenant.cces.invalid' - Field 'masters_az': No valid AZ values found. Location will be empty.",
+                "WARNING: Entity 'tenant.cces.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty."
             ]
         )
         clear_collected_warnings()

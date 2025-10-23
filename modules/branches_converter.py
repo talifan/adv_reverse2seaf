@@ -1,17 +1,21 @@
 # modules/branches_converter.py
 
+from id_prefix import ensure_prefix, build_id
+
+
 def find_dc_region_key(source_data, country, city):
     """Finds or constructs a key for a DC Region based on country and city."""
     # This is a simplification. In a real scenario, we would have a mapping or a way to look up DC Regions.
-    # For now, we'll construct a key like 'flix.dc_region.country_city'.
     if country and city:
-        return f"flix.dc_region.{country.lower().replace(' ', '_')}_{city.lower().replace(' ', '_')}"
+        region_key = f"{country.lower().replace(' ', '_')}_{city.lower().replace(' ', '_')}"
+        return build_id('dc_region', region_key)
     return None
 
 def convert(source_data):
     """
     Converts Branches data to seaf.ta.services.office format.
     """
+    ensure_prefix(source_data=source_data)
     branches_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.branches', {})
     
     converted_offices = {}

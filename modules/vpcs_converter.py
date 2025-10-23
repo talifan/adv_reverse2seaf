@@ -1,11 +1,14 @@
 import ipaddress
 
+from id_prefix import ensure_prefix, dc_ref
+
 # modules/vpcs_converter.py
 
 def convert(source_data):
     """
-    Converts VPC data to the target flix.vpcs format.
+    Converts VPC data to the target prefixed vpcs format.
     """
+    ensure_prefix(source_data=source_data)
     vpcs_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.vpcs', {})
     subnets_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.subnets', {})
     ecss_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.ecss', {})
@@ -26,6 +29,12 @@ def convert(source_data):
             subnet_networks[subnet_key] = ipaddress.ip_network(cidr, strict=False)
         except ValueError:
             continue
+
+    def normalize_dc(value):
+        if isinstance(value, str) and value.strip():
+            value = value.strip()
+            return value if '.' in value else dc_ref(value)
+        return None
 
     def normalize_az(value):
         if not value:
@@ -81,8 +90,8 @@ def convert(source_data):
                     subnet_details = subnets_data.get(subnet_key, {})
                     az_names.update(normalize_az(subnet_details.get('availability_zone')))
                     az_names.update(normalize_az(subnet_details.get('az')))
-                    dc_hint = subnet_details.get('DC')
-                    if isinstance(dc_hint, str) and dc_hint:
+                    dc_hint = normalize_dc(subnet_details.get('DC'))
+                    if dc_hint:
                         dc_hints.add(dc_hint)
 
         # Collect AZs/DCs from ECS
@@ -94,8 +103,8 @@ def convert(source_data):
                         for disk_props in disk_item.values():
                             if isinstance(disk_props, dict):
                                 az_names.update(normalize_az(disk_props.get('az')))
-                dc_hint = ecs_details.get('DC')
-                if isinstance(dc_hint, str) and dc_hint:
+                dc_hint = normalize_dc(ecs_details.get('DC'))
+                if dc_hint:
                     dc_hints.add(dc_hint)
 
         # Collect AZs from CCE clusters
@@ -108,24 +117,24 @@ def convert(source_data):
         for rds_details in rdss_data.values():
             if rds_details.get('vpc_id') == vpc_uuid:
                 az_names.update(normalize_az(rds_details.get('az')))
-                dc_hint = rds_details.get('DC')
-                if isinstance(dc_hint, str) and dc_hint:
+                dc_hint = normalize_dc(rds_details.get('DC'))
+                if dc_hint:
                     dc_hints.add(dc_hint)
 
         # Collect AZs/DCs from DMS services
         for dms_details in dmss_data.values():
             if dms_details.get('vpc_id') == vpc_uuid:
                 az_names.update(normalize_az(dms_details.get('available_az')))
-                dc_hint = dms_details.get('DC')
-                if isinstance(dc_hint, str) and dc_hint:
+                dc_hint = normalize_dc(dms_details.get('DC'))
+                if dc_hint:
                     dc_hints.add(dc_hint)
 
-        location_refs = sorted({f"flix.dc.{az}" for az in az_names if isinstance(az, str) and az})
+        location_refs = sorted({dc_ref(az) for az in az_names if isinstance(az, str) and az})
         if not location_refs:
-            location_refs = sorted({hint for hint in dc_hints if hint.startswith('flix.dc.')})
+            location_refs = sorted(dc_hints)
         if not location_refs:
-            fallback_dc = vpc_details.get('DC')
-            if isinstance(fallback_dc, str) and fallback_dc.startswith('flix.dc.'):
+            fallback_dc = normalize_dc(vpc_details.get('DC'))
+            if fallback_dc:
                 location_refs = [fallback_dc]
 
         if location_refs:

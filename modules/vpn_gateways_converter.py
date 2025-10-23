@@ -1,5 +1,8 @@
 # modules/vpn_gateways_converter.py
 
+from id_prefix import get_prefix, build_id
+
+
 def normalize_az(value):
     """Normalize AZ values to a list of non-empty strings."""
     if not value:
@@ -19,11 +22,11 @@ def normalize_az(value):
 
 def find_network_key(source_data, subnet_id):
     """Finds the full key for a Network from its subnet ID."""
-    return f"flix.subnets.{subnet_id}" if subnet_id else None
+    return build_id("subnets", subnet_id) if subnet_id else None
 
 def find_network_segment_key(vpc_id):
     """Constructs the full key for a Network Segment from its VPC ID."""
-    return f"flix.vpcs.{vpc_id}" if vpc_id else None
+    return build_id("vpcs", vpc_id) if vpc_id else None
 
 def convert(source_data):
     """
@@ -55,7 +58,7 @@ def convert(source_data):
             network_connection_refs.append(find_network_key(source_data, subnet_id))
         network_connection_refs = [ref for ref in network_connection_refs if ref] # Filter out None values
 
-        subnet_details = subnets_data.get(f"flix.subnets.{subnet_id}") or subnets_data.get(subnet_id) or next(
+        subnet_details = subnets_data.get(build_id("subnets", subnet_id)) or subnets_data.get(subnet_id) or next(
             (details for key, details in subnets_data.items() if details.get('id') == subnet_id), None
         )
 
@@ -80,15 +83,16 @@ def convert(source_data):
                             if isinstance(disk_props, dict):
                                 az_names.update(normalize_az(disk_props.get('az')))
 
-        location_refs = sorted({f"flix.dc.{az}" for az in az_names if isinstance(az, str) and az})
+        location_refs = sorted({build_id("dc", az) for az in az_names if isinstance(az, str) and az})
 
         dc_hints = set()
+        prefix = get_prefix()
         if subnet_details:
             subnet_dc = subnet_details.get('DC')
-            if isinstance(subnet_dc, str) and subnet_dc.startswith('flix.dc.'):
+            if isinstance(subnet_dc, str) and subnet_dc.startswith(f"{prefix}.dc."):
                 dc_hints.add(subnet_dc)
         vpn_dc_hint = vpn_gw_details.get('DC')
-        if isinstance(vpn_dc_hint, str) and vpn_dc_hint.startswith('flix.dc.'):
+        if isinstance(vpn_dc_hint, str) and vpn_dc_hint.startswith(f"{prefix}.dc."):
             dc_hints.add(vpn_dc_hint)
 
         if not location_refs:

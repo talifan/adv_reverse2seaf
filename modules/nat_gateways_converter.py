@@ -1,6 +1,8 @@
 # modules/nat_gateways_converter.py
 import json  # For dumping rules to description
 
+from id_prefix import ensure_prefix, subnet_ref, vpc_ref, dc_ref
+
 def normalize_az(value):
     """Normalize AZ values to a list of non-empty strings."""
     if not value:
@@ -32,6 +34,7 @@ def convert(source_data):
     """
     Converts NAT Gateway data to seaf.ta.components.network format.
     """
+    ensure_prefix(source_data=source_data)
     nat_gateways_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.nat_gateways', {})
     subnets_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.subnets', {})
     ecss_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.ecss', {})
@@ -63,7 +66,7 @@ def convert(source_data):
 
         network_connection_refs = []
         if subnet_id:
-            network_connection_refs.append(f"flix.subnets.{subnet_id}")
+            network_connection_refs.append(subnet_ref(subnet_id))
         network_connection_refs = [ref for ref in network_connection_refs if ref]  # Filter out None values
 
         # Resolve segment from subnet_id
@@ -72,7 +75,7 @@ def convert(source_data):
         if subnet_details:
             subnet_vpc_id = subnet_details.get('vpc')
             if subnet_vpc_id:
-                segment_ref = f"flix.vpcs.{subnet_vpc_id}"
+                segment_ref = vpc_ref(subnet_vpc_id)
 
         # Resolve location based on AZ/DC data
         az_names = set()
@@ -92,15 +95,21 @@ def convert(source_data):
                             if isinstance(disk_props, dict):
                                 az_names.update(normalize_az(disk_props.get('az')))
 
-        location_refs = sorted({f"flix.dc.{az}" for az in az_names if isinstance(az, str) and az})
+        def normalize_dc(dc_value):
+            if isinstance(dc_value, str) and dc_value.strip():
+                value = dc_value.strip()
+                return value if '.' in value else dc_ref(value)
+            return None
+
+        location_refs = sorted({dc_ref(az) for az in az_names if isinstance(az, str) and az})
 
         dc_hints = set()
         if subnet_details:
-            subnet_dc = subnet_details.get('DC')
-            if isinstance(subnet_dc, str) and subnet_dc.startswith('flix.dc.'):
+            subnet_dc = normalize_dc(subnet_details.get('DC'))
+            if subnet_dc:
                 dc_hints.add(subnet_dc)
-        nat_dc_hint = nat_details.get('DC')
-        if isinstance(nat_dc_hint, str) and nat_dc_hint.startswith('flix.dc.'):
+        nat_dc_hint = normalize_dc(nat_details.get('DC'))
+        if nat_dc_hint:
             dc_hints.add(nat_dc_hint)
 
         if not location_refs:

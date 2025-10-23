@@ -1,11 +1,13 @@
 # modules/dc_converter.py
 
 from warning_reporter import collect_warning # Import for collecting warnings
+from id_prefix import ensure_prefix, dc_ref, dc_az_ref
 
 def convert(source_data):
     """
     Creates a Data Center (DC) for each unique Availability Zone (AZ) found in the source data.
     """
+    ensure_prefix(source_data=source_data)
     unique_azs = set()
 
     def add_az(entity_id, field_name, az_source):
@@ -56,8 +58,8 @@ def convert(source_data):
 
     converted_dcs = {}
     for az_name in sorted(list(unique_azs)):
-        dc_id = f"flix.dc.{az_name}"
-        az_ref = f"flix.dc_az.{az_name}"
+        dc_id = dc_ref(az_name)
+        az_ref = dc_az_ref(az_name)
 
         converted_dcs[dc_id] = {
             'title': az_name,

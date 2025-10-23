@@ -1,17 +1,21 @@
 # modules/peerings_converter.py
 
+from id_prefix import ensure_prefix, vpc_ref
+
+
 def find_network_segment_key(source_data, vpc_id):
     """Finds the full key for a Network Segment from its VPC ID."""
     # This assumes that the vpc_id directly maps to the external_id of a converted network_segment
     # which is the original vpc_id.
-    # So, if a vpc with id 'd48e294f-eb6a-4352-8d73-275b7a966e90' was converted to 'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90'
+    # So, if a vpc with id 'd48e294f-eb6a-4352-8d73-275b7a966e90' was converted to '<prefix>.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90'
     # then we can construct the key.
-    return f"flix.vpcs.{vpc_id}" if vpc_id else None
+    return vpc_ref(vpc_id) if vpc_id else None
 
 def convert(source_data):
     """
     Converts VPC Peerings data to seaf.ta.services.logical_link format.
     """
+    ensure_prefix(source_data=source_data)
     peerings_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.peerings', {})
     
     converted_logical_links = {}

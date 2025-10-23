@@ -6,8 +6,11 @@ import os
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from rdss_converter import convert
 from warning_reporter import get_collected_warnings, clear_collected_warnings
+
+set_prefix('tenant')
 
 class TestRdssConverter(unittest.TestCase):
 
@@ -15,13 +18,13 @@ class TestRdssConverter(unittest.TestCase):
         # Sample input data including VPCs and Subnets for linking
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'flix.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
+                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
                     'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
                     'name': 'vpc-internal'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
-                'flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
+                'tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
                     'name': 'subnet-Prod',
                     'cidr': '10.10.0.0/24',
@@ -29,7 +32,7 @@ class TestRdssConverter(unittest.TestCase):
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.rdss': {
-                'flix.rdss.0e493e5847714a14a313e215d9e59b15in03': {
+                'tenant.rdss.0e493e5847714a14a313e215d9e59b15in03': {
                     'id': '0e493e5847714a14a313e215d9e59b15in03',
                     'name': 'rds-prod-postgre',
                     'status': 'ACTIVE',
@@ -64,7 +67,7 @@ class TestRdssConverter(unittest.TestCase):
                     },
                     'tags': [],
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 }
             }
         }
@@ -72,16 +75,16 @@ class TestRdssConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.cluster': {
-                'flix.rdss.0e493e5847714a14a313e215d9e59b15in03': {
+                'tenant.rdss.0e493e5847714a14a313e215d9e59b15in03': {
                     'title': 'rds-prod-postgre',
                     'description': 'Status: ACTIVE\nFlavor: rds.pg.c6.large.2\nDatastore Type: PostgreSQL\nDatastore Version: 13\nDatastore Complete Version: 13.2.3\nVolume Type: ULTRAHIGH\nVolume Size (GB): 120\nNodes: Node ID: 8ac72544860a4d50825cc307437d9b56no03, Name: dms-prod-postgre_node0, Role: master, Status: ACTIVE, AZ: ru-moscow-1b\nBackup Start Time: 16:00-17:00\nBackup Keep Days: 7',
                     'external_id': '0e493e5847714a14a313e215d9e59b15in03',
                     'fqdn': '10.10.0.40',
                     'reservation_type': 'Single',
                     'service_type': 'СУБД',
-                    'availabilityzone': ['flix.dc_az.ru-moscow-1b'],
-                    'location': ['flix.dc.ru-moscow-1b'],
-                    'network_connection': ['flix.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1']
+                    'availabilityzone': ['tenant.dc_az.ru-moscow-1b'],
+                    'location': ['tenant.dc.ru-moscow-1b'],
+                    'network_connection': ['tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1']
                 }
             }
         }
@@ -98,7 +101,7 @@ class TestRdssConverter(unittest.TestCase):
     def test_convert_rdss_warnings(self):
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.rdss': {
-                'flix.rdss.invalid': {
+                'tenant.rdss.invalid': {
                     'id': 'invalid',
                     'name': 'invalid-rds',
                     'nodes': [],
@@ -110,7 +113,7 @@ class TestRdssConverter(unittest.TestCase):
 
         expected_output = {
             'seaf.ta.services.cluster': {
-                'flix.rdss.invalid': {
+                'tenant.rdss.invalid': {
                     'title': 'invalid-rds',
                     'description': '',
                     'external_id': 'invalid',
@@ -130,9 +133,9 @@ class TestRdssConverter(unittest.TestCase):
         self.assertEqual(
             get_collected_warnings(),
             [
-                "WARNING: Entity 'flix.rdss.invalid' - Field 'nodes': Missing or empty 'nodes'. Availability zone and location will be empty.",
-                "WARNING: Entity 'flix.rdss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty.",
-                "WARNING: Entity 'flix.rdss.invalid' - Field 'vpc_id': Missing 'vpc_id'. Ensure upstream segment references are available."
+                "WARNING: Entity 'tenant.rdss.invalid' - Field 'nodes': Missing or empty 'nodes'. Availability zone and location will be empty.",
+                "WARNING: Entity 'tenant.rdss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty.",
+                "WARNING: Entity 'tenant.rdss.invalid' - Field 'vpc_id': Missing 'vpc_id'. Ensure upstream segment references are available."
             ]
         )
         clear_collected_warnings()

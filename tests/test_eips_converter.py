@@ -4,8 +4,12 @@ import os
 
 # Add modules to the python path
 sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
+sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
 
+from id_prefix import set_prefix
 from eips_converter import convert
+
+set_prefix('tenant')
 
 class TestEipsConverter(unittest.TestCase):
 
@@ -13,13 +17,13 @@ class TestEipsConverter(unittest.TestCase):
         # Sample input data for EIPs, including subnets and vpcs for segment lookup
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'flix.vpcs.vpc-internal-id': {
+                'tenant.vpcs.vpc-internal-id': {
                     'id': 'vpc-internal-id',
                     'name': 'vpc-internal'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
-                'flix.subnets.subnet-prod-id': {
+                'tenant.subnets.subnet-prod-id': {
                     'id': 'subnet-prod-id',
                     'name': 'subnet-Prod',
                     'cidr': '10.1.1.0/24',
@@ -28,7 +32,7 @@ class TestEipsConverter(unittest.TestCase):
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {
-                'flix.ecss.server-1': {
+                'tenant.ecss.server-1': {
                     'id': 'server-1',
                     'name': 'ecs-server-1',
                     'addresses': ['10.1.1.4'],
@@ -36,7 +40,7 @@ class TestEipsConverter(unittest.TestCase):
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.nat_gateways': {
-                'flix.nat_gateways.nat-1': {
+                'tenant.nat_gateways.nat-1': {
                     'id': 'nat-1',
                     'name': 'nat-gateway-1',
                     'address': '10.1.1.3'
@@ -44,20 +48,20 @@ class TestEipsConverter(unittest.TestCase):
             },
             'seaf.ta.reverse.cloud_ru.advanced.eips': {
                 # This EIP has a public ext_address, should be linked to the Internet segment
-                'flix.eips.public-eip-id': {
+                'tenant.eips.public-eip-id': {
                     'id': 'public-eip-id',
                     'ext_address': '8.8.8.8', # Public IP
                     'int_address': '10.1.1.3',
                     'tenant': 'tenant-a',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 },
                 # This EIP has a private ext_address, should use the regular segment lookup
-                'flix.eips.private-eip-id': {
+                'tenant.eips.private-eip-id': {
                     'id': 'private-eip-id',
                     'ext_address': '192.168.1.100', # Private IP
                     'int_address': '10.1.1.4',
                     'tenant': 'tenant-b',
-                    'DC': 'flix.dc.01'
+                    'DC': 'tenant.dc.01'
                 }
             }
         }
@@ -65,49 +69,49 @@ class TestEipsConverter(unittest.TestCase):
         # Expected output
         expected_output = {
             'seaf.ta.services.network': {
-                'flix.eips.public-eip-id': {
+                'tenant.eips.public-eip-id': {
                     'title': '8.8.8.8',
-                    'description': 'Internal IP: 10.1.1.3\nTenant: tenant-a\nDC: flix.dc.01',
+                    'description': 'Internal IP: 10.1.1.3\nTenant: tenant-a\nDC: tenant.dc.01',
                     'external_id': 'public-eip-id',
                     'type': 'WAN',
                     'wan_ip': '8.8.8.8',
-                    'segment': ['flix.network_segment.internet.dc_ru_moscow_1a'],
+                    'segment': ['tenant.network_segment.internet.ru_moscow_1a'],
                     'provider': 'Cloud.ru'
                 },
-                'flix.eips.private-eip-id': {
+                'tenant.eips.private-eip-id': {
                     'title': '192.168.1.100',
-                    'description': 'Internal IP: 10.1.1.4\nTenant: tenant-b\nDC: flix.dc.01',
+                    'description': 'Internal IP: 10.1.1.4\nTenant: tenant-b\nDC: tenant.dc.01',
                     'external_id': 'private-eip-id',
                     'type': 'WAN',
                     'wan_ip': '192.168.1.100',
-                    'segment': ['flix.vpcs.vpc-internal-id'],
+                    'segment': ['tenant.vpcs.vpc-internal-id'],
                     'provider': 'Cloud.ru'
                 }
             },
             'seaf.ta.services.network_segment': {
-                'flix.network_segment.internet.dc_ru_moscow_1a': {
+                'tenant.network_segment.internet.ru_moscow_1a': {
                     'title': 'Public Internet',
-                    'description': 'Internet segment for flix.dc.ru-moscow-1a',
-                    'external_id': 'internet_segment_dc_ru_moscow_1a',
+                    'description': 'Internet segment for tenant.dc.ru-moscow-1a',
+                    'external_id': 'internet_segment_ru_moscow_1a',
                     'sber': {
                         'zone': 'INTERNET',
-                        'location': 'flix.dc.ru-moscow-1a'
+                        'location': 'tenant.dc.ru-moscow-1a'
                     }
                 }
             },
             'seaf.ta.services.network_links': {
-                'flix.eips.public-eip-id.link': {
+                'tenant.eips.public-eip-id.link': {
                     'title': 'Связь EIP 8.8.8.8',
-                    'description': 'EIP 8.8.8.8 связан с: flix.nat_gateways.nat-1',
+                    'description': 'EIP 8.8.8.8 связан с: tenant.nat_gateways.nat-1',
                     'external_id': 'public-eip-id-link',
-                    'network_connection': ['flix.eips.public-eip-id', 'flix.nat_gateways.nat-1'],
+                    'network_connection': ['tenant.eips.public-eip-id', 'tenant.nat_gateways.nat-1'],
                     'technology': 'EIP'
                 },
-                'flix.eips.private-eip-id.link': {
+                'tenant.eips.private-eip-id.link': {
                     'title': 'Связь EIP 192.168.1.100',
-                    'description': 'EIP 192.168.1.100 связан с: flix.ecss.server-1',
+                    'description': 'EIP 192.168.1.100 связан с: tenant.ecss.server-1',
                     'external_id': 'private-eip-id-link',
-                    'network_connection': ['flix.eips.private-eip-id', 'flix.ecss.server-1'],
+                    'network_connection': ['tenant.eips.private-eip-id', 'tenant.ecss.server-1'],
                     'technology': 'EIP'
                 }
             }
