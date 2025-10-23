@@ -1,0 +1,9 @@
+# Generated outputs
+architecture/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Test artifacts
+.pytest_cache/
