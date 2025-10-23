@@ -3,32 +3,24 @@ import sys
 import os
 
 # Add modules and utils to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
+from id_prefix import set_prefix, segment_ref
 from rdss_converter import convert
 from warning_reporter import get_collected_warnings, clear_collected_warnings
-
-set_prefix('tenant')
 
 class TestRdssConverter(unittest.TestCase):
 
     def test_convert_rdss(self):
-        # Sample input data including VPCs and Subnets for linking
+        set_prefix('tenant')
+        # Sample input data
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
-                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'name': 'vpc-internal'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
-                    'name': 'subnet-Prod',
-                    'cidr': '10.10.0.0/24',
-                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90'
+                    'name': 'subnet-Prod'
                 }
             },
             'seaf.ta.reverse.cloud_ru.advanced.rdss': {
@@ -84,7 +76,8 @@ class TestRdssConverter(unittest.TestCase):
                     'service_type': 'СУБД',
                     'availabilityzone': ['tenant.dc_az.ru-moscow-1b'],
                     'location': ['tenant.dc.ru-moscow-1b'],
-                    'network_connection': ['tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1']
+                    'network_connection': ['tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
+                    'segment': 'tenant.segment.ru-moscow-1b.INT-NET'
                 }
             }
         }
@@ -99,6 +92,7 @@ class TestRdssConverter(unittest.TestCase):
         clear_collected_warnings()
 
     def test_convert_rdss_warnings(self):
+        set_prefix('tenant')
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.rdss': {
                 'tenant.rdss.invalid': {
@@ -122,7 +116,8 @@ class TestRdssConverter(unittest.TestCase):
                     'service_type': 'СУБД',
                     'availabilityzone': [],
                     'location': [],
-                    'network_connection': []
+                    'network_connection': [],
+                    'segment': None
                 }
             }
         }
@@ -134,8 +129,7 @@ class TestRdssConverter(unittest.TestCase):
             get_collected_warnings(),
             [
                 "WARNING: Entity 'tenant.rdss.invalid' - Field 'nodes': Missing or empty 'nodes'. Availability zone and location will be empty.",
-                "WARNING: Entity 'tenant.rdss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty.",
-                "WARNING: Entity 'tenant.rdss.invalid' - Field 'vpc_id': Missing 'vpc_id'. Ensure upstream segment references are available."
+                "WARNING: Entity 'tenant.rdss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty."
             ]
         )
         clear_collected_warnings()

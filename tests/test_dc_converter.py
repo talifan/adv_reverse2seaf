@@ -2,29 +2,18 @@ import unittest
 import sys
 import os
 
-# Debug prints
-print(f"__file__: {__file__}")
-print(f"os.path.dirname(__file__): {os.path.dirname(__file__)}")
-print(f"os.path.join(os.path.dirname(__file__), '..', 'modules'): {os.path.join(os.path.dirname(__file__), '..', 'modules')}")
-print(f"os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')): {os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules'))}")
-print(f"os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')): {os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))}")
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
-
-print(f"sys.path after append: {sys.path}")
 
 from id_prefix import set_prefix
 from dc_converter import convert
 from warning_reporter import get_collected_warnings, clear_collected_warnings # Import for testing warnings
 
-set_prefix('tenant')
-
 class TestDcConverter(unittest.TestCase):
 
     def setUp(self):
         clear_collected_warnings() # Clear warnings before each test
+        set_prefix('tenant') # Set prefix for each test
 
     def test_convert_dcs_from_azs(self):
         source_data = {

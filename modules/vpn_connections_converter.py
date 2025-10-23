@@ -1,6 +1,6 @@
 # modules/vpn_connections_converter.py
 
-from id_prefix import ensure_prefix, build_id
+from id_prefix import ensure_prefix, build_id, get_prefix, segment_ref
 def normalize_reference(identifier, default_type):
     if not identifier or not isinstance(identifier, str):
         return None
@@ -14,21 +14,17 @@ def find_vpn_gateway_key(source_data, gw_id):
     """Finds the full key for a VPN Gateway from its ID."""
     return normalize_reference(gw_id, 'vpn_gateways')
 
-def find_office_or_dc_key(source_data, branch_id):
-    """Finds the full key for an Office or DC from its ID."""
-    normalized = normalize_reference(branch_id, 'office')
-    if normalized and '.dc.' in normalized:
-        return normalized
-    if normalized:
-        return normalized
-    return None
-
-
 def convert(source_data):
     """
     Converts VPN Connections data to seaf.ta.services.logical_link format.
     """
     ensure_prefix(source_data=source_data)
+    prefix = get_prefix()
+    segment_targets = {
+        f"{prefix}.office.hq": segment_ref('ru-moscow-1a', 'INT-NET'),
+        f"{prefix}.office.kremlin": segment_ref('ru-moscow-1a', 'INT-NET'),
+        f"{prefix}.office.spb": segment_ref('ru-moscow-1b', 'INT-NET')
+    }
     vpn_connections_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.vpn_connections', {})
     
     converted_logical_links = {}
@@ -56,11 +52,22 @@ def convert(source_data):
         
         target_refs = []
         branch_id = vpn_conn_details.get('branch_id')
+        target_ref = None
         if branch_id:
-            target_ref = find_office_or_dc_key(source_data, branch_id)
-            if target_ref:
-                target_refs.append(target_ref)
-        
+            normalized_branch = normalize_reference(branch_id, 'office')
+            if normalized_branch in segment_targets:
+                target_ref = segment_targets[normalized_branch]
+            elif normalized_branch and '.dc.' in normalized_branch:
+                dc_name = normalized_branch.split('.')[-1]
+                if dc_name and '-' in dc_name:
+                    target_ref = segment_ref(dc_name, 'INT-NET')
+            elif normalized_branch:
+                target_ref = None
+        if target_ref:
+            target_refs.append(target_ref)
+        if not source_ref or not target_refs:
+            continue
+
         converted_logical_links[new_id] = {
             'title': vpn_conn_details.get('name'),
             'description': description,

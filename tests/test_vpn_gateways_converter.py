@@ -3,25 +3,18 @@ import sys
 import os
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
 from vpn_gateways_converter import convert
-
-set_prefix('tenant')
 
 class TestVpnGatewaysConverter(unittest.TestCase):
 
     def test_convert_vpn_gateways(self):
-        # Sample input data including Subnets and VPCs for linking
+        set_prefix('tenant')
+        # Sample input data including Subnets for linking
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.abddcd66-c607-4ec6-9d12-30378e0e54c0': {
-                    'id': 'abddcd66-c607-4ec6-9d12-30378e0e54c0',
-                    'name': 'vpc-external'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.fa768d9d-787e-4778-930d-8b8049f01df4': {
                     'id': 'fa768d9d-787e-4778-930d-8b8049f01df4',
@@ -65,7 +58,7 @@ class TestVpnGatewaysConverter(unittest.TestCase):
                     'realization_type': 'Виртуальный',
                     'type': 'VPN',
                     'network_connection': ['tenant.subnets.fa768d9d-787e-4778-930d-8b8049f01df4'],
-                    'segment': 'tenant.vpcs.abddcd66-c607-4ec6-9d12-30378e0e54c0',
+                    'segment': 'tenant.segment.ru-moscow-1a.INT-NET',
                     'location': ['tenant.dc.ru-moscow-1a'],
                     'address': '188.72.107.53'
                 }

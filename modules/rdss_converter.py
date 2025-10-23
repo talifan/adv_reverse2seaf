@@ -2,7 +2,7 @@
 
 from warning_reporter import collect_warning  # For collecting conversion warnings
 
-from id_prefix import ensure_prefix, dc_az_ref, subnet_ref, dc_ref
+from id_prefix import ensure_prefix, subnet_ref, dc_ref, dc_az_ref, segment_ref
 
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name, with robust validation."""
@@ -10,9 +10,19 @@ def find_dc_az_key(source_data, az_name):
         return dc_az_ref(az_name)
     return None
 
-def find_network_key(source_data, subnet_id):
-    """Finds the full key for a Network from its subnet ID."""
-    return subnet_ref(subnet_id) if subnet_id else None
+def _normalize_dc_name(raw_dc: str | None) -> str | None:
+    """Extract the simple DC identifier regardless of how it is provided."""
+    if not isinstance(raw_dc, str):
+        return None
+    value = raw_dc.strip()
+    if not value:
+        return None
+    if '.dc.' in value:
+        return value.split('.dc.', 1)[1]
+    if value.startswith('dc.'):
+        return value.split('dc.', 1)[1]
+    return value
+
 
 def convert(source_data):
     """
@@ -61,19 +71,6 @@ def convert(source_data):
             description_parts.append(f"Backup Start Time: {backup_strategy.get('start_time')}")
             description_parts.append(f"Backup Keep Days: {backup_strategy.get('keep_days')}")
         
-        # Removed other fields from description that are not in expected output
-        # if rds_details.get('description'):
-        #     description_parts.append(rds_details.get('description'))
-        # if rds_details.get('public_ips'):
-        #     description_parts.append(f"Public IPs: {', '.join(rds_details.get('public_ips'))}")
-        # if rds_details.get('tags'):
-        #     tags_str = ', '.join([f"{tag['key']}:{tag['value']}" for tag in rds_details.get('tags')])
-        #     description_parts.append(f"Tags: {tags_str}")
-        # if rds_details.get('tenant'):
-        #     description_parts.append(f"Tenant: {rds_details.get('tenant')}")
-        # if rds_details.get('switch_strategy'):
-        #     description_parts.append(f"Switch Strategy: {rds_details.get('switch_strategy')}")
-
         description = '\n'.join(description_parts).strip()
 
         # Collect AZs from nodes with validation
@@ -100,11 +97,7 @@ def convert(source_data):
 
         # Resolve AZ references from collected node AZs
         az_refs = [find_dc_az_key(source_data, az_name) for az_name in sorted(list(unique_node_azs))]
-        az_refs = [ref for ref in az_refs if ref] # Filter out None values
-
-        # Resolve location (DC) based on collected node AZs
-        location_refs = [dc_ref(az_name) for az_name in sorted(list(unique_node_azs)) if az_name]
-        location_refs = [ref for ref in location_refs if ref] # Filter out None values
+        az_refs = [ref for ref in az_refs if ref]  # Filter out None values
 
         # Resolve network_connection (subnet_id)
         network_connection_refs = []
@@ -113,13 +106,26 @@ def convert(source_data):
             collect_warning(rds_id, 'subnet_id', "Missing or empty 'subnet_id'. network_connection will be empty.")
         elif not isinstance(subnet_id, str):
             collect_warning(rds_id, 'subnet_id', f"Invalid type '{type(subnet_id).__name__}' for 'subnet_id'. network_connection will be empty.")
-            subnet_id = None
-        if subnet_id:
-            network_connection_refs.append(find_network_key(source_data, subnet_id))
-        network_connection_refs = [ref for ref in network_connection_refs if ref] # Filter out None values
+        else:
+            network_connection_refs.append(subnet_ref(subnet_id))
+        network_connection_refs = [ref for ref in network_connection_refs if ref]
 
-        if not rds_details.get('vpc_id'):
-            collect_warning(rds_id, 'vpc_id', "Missing 'vpc_id'. Ensure upstream segment references are available.")
+        # Determine DC/location based on node AZs or explicit DC hint
+        location_refs = []
+        primary_dc_name = None
+        if unique_node_azs:
+            for az_name in sorted(list(unique_node_azs)):
+                dc_name = az_name.strip()
+                if dc_name:
+                    location_refs.append(dc_ref(dc_name))
+            primary_dc_name = sorted(list(unique_node_azs))[0].strip()
+        else:
+            explicit_dc = _normalize_dc_name(rds_details.get('DC'))
+            if explicit_dc:
+                primary_dc_name = explicit_dc
+                location_refs.append(dc_ref(explicit_dc))
+
+        int_net_segment_ref = segment_ref(primary_dc_name, 'INT-NET') if primary_dc_name else None
 
         converted_clusters[new_id] = {
             'title': rds_details.get('name'),
@@ -131,6 +137,7 @@ def convert(source_data):
             'availabilityzone': az_refs,
             'location': location_refs,
             'network_connection': network_connection_refs,
+            'segment': int_net_segment_ref
         }
 
     return {'seaf.ta.services.cluster': converted_clusters}

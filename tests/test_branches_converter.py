@@ -3,17 +3,17 @@ import sys
 import os
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
 from id_prefix import set_prefix
+from id_prefix import set_prefix
 from branches_converter import convert
-
-set_prefix('tenant')
 
 class TestBranchesConverter(unittest.TestCase):
 
     def test_convert_branches(self):
+        set_prefix('tenant')
         # Sample input data for branches
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.branches': {

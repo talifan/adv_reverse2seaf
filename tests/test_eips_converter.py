@@ -3,25 +3,19 @@ import sys
 import os
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
+from id_prefix import set_prefix, segment_ref
 from eips_converter import convert
-
-set_prefix('tenant')
 
 class TestEipsConverter(unittest.TestCase):
 
     def test_convert_eips_with_public_and_private(self):
-        # Sample input data for EIPs, including subnets and vpcs for segment lookup
+        set_prefix('tenant')
+        # Sample input data for EIPs, including subnets for AZ lookup
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.vpc-internal-id': {
-                    'id': 'vpc-internal-id',
-                    'name': 'vpc-internal'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.subnet-prod-id': {
                     'id': 'subnet-prod-id',
@@ -46,8 +40,9 @@ class TestEipsConverter(unittest.TestCase):
                     'address': '10.1.1.3'
                 }
             },
+            'seaf.ta.reverse.cloud_ru.advanced.elbs': {},
             'seaf.ta.reverse.cloud_ru.advanced.eips': {
-                # This EIP has a public ext_address, should be linked to the Internet segment
+                # This EIP has a public ext_address, should be linked to the INTERNET segment
                 'tenant.eips.public-eip-id': {
                     'id': 'public-eip-id',
                     'ext_address': '8.8.8.8', # Public IP
@@ -55,7 +50,7 @@ class TestEipsConverter(unittest.TestCase):
                     'tenant': 'tenant-a',
                     'DC': 'tenant.dc.01'
                 },
-                # This EIP has a private ext_address, should use the regular segment lookup
+                # This EIP has a private ext_address, should be linked to the INT-NET segment
                 'tenant.eips.private-eip-id': {
                     'id': 'private-eip-id',
                     'ext_address': '192.168.1.100', # Private IP
@@ -75,7 +70,7 @@ class TestEipsConverter(unittest.TestCase):
                     'external_id': 'public-eip-id',
                     'type': 'WAN',
                     'wan_ip': '8.8.8.8',
-                    'segment': ['tenant.network_segment.internet.ru_moscow_1a'],
+                    'segment': ['tenant.segment.ru-moscow-1a.INTERNET'],
                     'provider': 'Cloud.ru'
                 },
                 'tenant.eips.private-eip-id': {
@@ -84,19 +79,8 @@ class TestEipsConverter(unittest.TestCase):
                     'external_id': 'private-eip-id',
                     'type': 'WAN',
                     'wan_ip': '192.168.1.100',
-                    'segment': ['tenant.vpcs.vpc-internal-id'],
+                    'segment': ['tenant.segment.ru-moscow-1a.INT-NET'],
                     'provider': 'Cloud.ru'
-                }
-            },
-            'seaf.ta.services.network_segment': {
-                'tenant.network_segment.internet.ru_moscow_1a': {
-                    'title': 'Public Internet',
-                    'description': 'Internet segment for tenant.dc.ru-moscow-1a',
-                    'external_id': 'internet_segment_ru_moscow_1a',
-                    'sber': {
-                        'zone': 'INTERNET',
-                        'location': 'tenant.dc.ru-moscow-1a'
-                    }
                 }
             },
             'seaf.ta.services.network_links': {

@@ -3,17 +3,19 @@ import sys
 import os
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
 from id_prefix import set_prefix
 from ecss_converter import convert
 
-set_prefix('tenant')
+from id_prefix import set_prefix
+from ecss_converter import convert
 
 class TestEcssConverter(unittest.TestCase):
 
     def test_convert_ecss(self):
+        set_prefix('tenant')
         # Sample input data including VPCs and Subnets for linking
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.vpcs': {

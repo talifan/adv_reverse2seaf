@@ -3,26 +3,20 @@ import sys
 import os
 
 # Add modules and utils to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
+from id_prefix import set_prefix, segment_ref
 from dmss_converter import convert
 from warning_reporter import get_collected_warnings, clear_collected_warnings
-
-set_prefix('tenant')
 
 class TestDmssConverter(unittest.TestCase):
 
     def test_convert_dmss(self):
-        # Sample input data including VPCs and Subnets for linking
+        set_prefix('tenant')
+        # Sample input data
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
-                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'name': 'vpc-internal'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
                     'id': '6b2820d7-17c6-409a-91cb-b634cf596fdb',
@@ -72,7 +66,8 @@ class TestDmssConverter(unittest.TestCase):
                     'service_type': 'Интеграционная шина  (MQ, ETL, API)',
                     'availabilityzone': ['tenant.dc_az.ru-moscow-1a'],
                     'location': ['tenant.dc.ru-moscow-1a'],
-                    'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb']
+                    'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
+                    'segment': 'tenant.segment.ru-moscow-1a.INT-NET'
                 }
             }
         }
@@ -87,6 +82,7 @@ class TestDmssConverter(unittest.TestCase):
         clear_collected_warnings()
 
     def test_convert_dmss_warnings(self):
+        set_prefix('tenant')
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.dmss': {
                 'tenant.dmss.invalid': {
@@ -110,7 +106,8 @@ class TestDmssConverter(unittest.TestCase):
                     'service_type': 'Интеграционная шина  (MQ, ETL, API)',
                     'availabilityzone': [],
                     'location': [],
-                    'network_connection': []
+                    'network_connection': [],
+                    'segment': None
                 }
             }
         }
@@ -124,8 +121,7 @@ class TestDmssConverter(unittest.TestCase):
                 "WARNING: Entity 'tenant.dmss.invalid.available_az' - Field 'value': Invalid AZ value 'ru'. Skipping.",
                 "WARNING: Entity 'tenant.dmss.invalid.available_az' - Field 'value': Invalid AZ value '123'. Skipping.",
                 "WARNING: Entity 'tenant.dmss.invalid' - Field 'available_az': No valid AZ values found. Location will be empty.",
-                "WARNING: Entity 'tenant.dmss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty.",
-                "WARNING: Entity 'tenant.dmss.invalid' - Field 'vpc_id': Missing 'vpc_id'. Ensure upstream segment references are available."
+                "WARNING: Entity 'tenant.dmss.invalid' - Field 'subnet_id': Missing or empty 'subnet_id'. network_connection will be empty."
             ]
         )
         clear_collected_warnings()

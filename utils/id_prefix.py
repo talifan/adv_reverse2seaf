@@ -64,3 +64,12 @@ def subnet_ref(subnet: str) -> str:
 
 def kb_ref(tag: str, auth_type: str) -> str:
     return build_id('kb', tag.lower(), auth_type.lower())
+
+def segment_ref(dc_name: str, segment_name: str) -> str:
+    return build_id('segment', dc_name, segment_name)
+
+def get_name_from_ref(ref: str) -> str | None:
+    """Extracts the name part from a reference string (e.g., 'prefix.dc.my-dc' -> 'my-dc')."""
+    if not ref or not isinstance(ref, str) or '.' not in ref:
+        return None
+    return ref.split('.')[-1]

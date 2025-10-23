@@ -1,19 +1,16 @@
 # modules/peerings_converter.py
 
-from id_prefix import ensure_prefix, vpc_ref
+from id_prefix import ensure_prefix, build_id
 
-
-def find_network_segment_key(source_data, vpc_id):
-    """Finds the full key for a Network Segment from its VPC ID."""
-    # This assumes that the vpc_id directly maps to the external_id of a converted network_segment
-    # which is the original vpc_id.
-    # So, if a vpc with id 'd48e294f-eb6a-4352-8d73-275b7a966e90' was converted to '<prefix>.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90'
-    # then we can construct the key.
-    return vpc_ref(vpc_id) if vpc_id else None
+def find_router_key(vpc_id):
+    """Constructs the full key for a router from its VPC ID."""
+    # This assumes that a router is created with an ID of '<prefix>.vpcs.<vpc_id>.router'
+    return build_id('vpcs', vpc_id, 'router') if vpc_id else None
 
 def convert(source_data):
     """
     Converts VPC Peerings data to seaf.ta.services.logical_link format.
+    The logical link is created between the routers of the peered VPCs.
     """
     ensure_prefix(source_data=source_data)
     peerings_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.peerings', {})
@@ -35,28 +32,19 @@ def convert(source_data):
 
         description = '\n'.join(description_parts).strip()
 
-        # Resolve endpoints (request_vpc and accept_vpc)
-        endpoints_refs = []
+        # Resolve endpoints to the routers of the peered VPCs
         request_vpc_id = peering_details.get('request_vpc')
-        if request_vpc_id:
-            endpoints_refs.append(find_network_segment_key(source_data, request_vpc_id))
+        source_router_ref = find_router_key(request_vpc_id)
         
         accept_vpc_id = peering_details.get('accept_vpc')
-        if accept_vpc_id:
-            endpoints_refs.append(find_network_segment_key(source_data, accept_vpc_id))
+        target_router_ref = find_router_key(accept_vpc_id)
         
-        endpoints_refs = [ref for ref in endpoints_refs if ref] # Filter out None values
-
-        # Ensure we have at least two endpoints for a peering
-        source_endpoint = endpoints_refs[0] if len(endpoints_refs) > 0 else None
-        target_endpoint = [endpoints_refs[1]] if len(endpoints_refs) > 1 else []
-
         converted_logical_links[new_id] = {
             'title': peering_details.get('name'),
             'description': description,
             'external_id': peering_details.get('id'),
-            'source': source_endpoint,
-            'target': target_endpoint,
+            'source': source_router_ref,
+            'target': [target_router_ref] if target_router_ref else [],
             'direction': '<==>',
         }
 

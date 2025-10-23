@@ -3,16 +3,19 @@ import sys
 import os
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('../modules'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
 from id_prefix import set_prefix
 from dc_region_converter import convert
 
-set_prefix('tenant')
+from id_prefix import set_prefix
+from dc_region_converter import convert
 
 class TestDCRegionConverter(unittest.TestCase):
 
     def test_convert_dc_regions(self):
+        set_prefix('tenant')
         # Sample input data with various AZs from different source entities
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {

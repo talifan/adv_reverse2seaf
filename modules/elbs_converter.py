@@ -1,7 +1,8 @@
 # modules/elbs_converter.py
 import json  # For dumping listeners and pools to description
 
-from id_prefix import ensure_prefix, subnet_ref, vpc_ref, dc_ref
+from id_prefix import ensure_prefix, subnet_ref, dc_ref, dc_az_ref
+from location_resolver import LocationResolver
 def normalize_az(value):
     """Normalize AZ values to a list of non-empty strings."""
     if not value:
@@ -33,17 +34,21 @@ def convert(source_data):
     Converts ELB (Elastic Load Balancer) data to seaf.ta.components.network format.
     """
     ensure_prefix(source_data=source_data)
+    resolver = LocationResolver(source_data)
     elbs_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.elbs', {})
     subnets_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.subnets', {})
     ecss_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.ecss', {})
     
-    converted_networks = {}
+    converted_services = {}
 
-    def normalize_dc(dc_value):
-        if isinstance(dc_value, str) and dc_value.strip():
-            value = dc_value.strip()
-            return value if '.' in value else dc_ref(value)
-        return None
+    def unique(sequence):
+        seen = set()
+        ordered = []
+        for item in sequence:
+            if item and item not in seen:
+                seen.add(item)
+                ordered.append(item)
+        return ordered
     
     for elb_id, elb_details in elbs_data.items():
         new_id = elb_id
@@ -72,27 +77,19 @@ def convert(source_data):
 
         # Resolve network_connection (subnet_id)
         subnet_id = elb_details.get('subnet_id')
-        subnet_key, subnet_details = find_subnet_entry(subnets_data, subnet_id)
+        subnet_key, subnet_details_found = find_subnet_entry(subnets_data, subnet_id)
 
         network_connection_refs = []
         if subnet_id:
             network_connection_refs.append(subnet_ref(subnet_id))
         network_connection_refs = [ref for ref in network_connection_refs if ref]  # Filter out None values
 
-        # Resolve segment from subnet_id
-        segment_ref = None
-        subnet_vpc_id = None
-        if subnet_details:
-            subnet_vpc_id = subnet_details.get('vpc')
-            if subnet_vpc_id:
-                segment_ref = vpc_ref(subnet_vpc_id) if subnet_vpc_id else None
-
-        # Resolve location based on AZ/DC data
+        # Resolve location and segment based on AZ/DC data
         az_names = set()
         az_names.update(normalize_az(elb_details.get('availability_zone')))
-        if subnet_details:
-            az_names.update(normalize_az(subnet_details.get('availability_zone')))
-            az_names.update(normalize_az(subnet_details.get('az')))
+        if subnet_details_found:
+            az_names.update(normalize_az(subnet_details_found.get('availability_zone')))
+            az_names.update(normalize_az(subnet_details_found.get('az')))
 
         # Look for ECS instances that reside in the same subnet
         for ecs_details in ecss_data.values():
@@ -105,38 +102,46 @@ def convert(source_data):
                             if isinstance(disk_props, dict):
                                 az_names.update(normalize_az(disk_props.get('az')))
 
-        location_refs = sorted({dc_ref(az) for az in az_names if isinstance(az, str) and az})
-
-        dc_hints = set()
-        if subnet_details:
-            subnet_dc = normalize_dc(subnet_details.get('DC'))
+        dc_candidates = []
+        if subnet_id:
+            subnet_dc = resolver.get_dc_for_subnet(subnet_id)
             if subnet_dc:
-                dc_hints.add(subnet_dc)
-        elb_dc_hint = normalize_dc(elb_details.get('DC'))
+                dc_candidates.append(subnet_dc)
+        for az_name in az_names:
+            resolved = resolver.resolve_dc_name(az_name)
+            if resolved:
+                dc_candidates.append(resolved)
+        if subnet_details_found:
+            subnet_dc_hint = resolver.resolve_dc_name(subnet_details_found.get('DC'))
+            if subnet_dc_hint:
+                dc_candidates.append(subnet_dc_hint)
+        elb_dc_hint = resolver.resolve_dc_name(elb_details.get('DC'))
         if elb_dc_hint:
-            dc_hints.add(elb_dc_hint)
+            dc_candidates.append(elb_dc_hint)
 
-        if not location_refs:
-            location_refs = sorted(dc_hints)
+        dc_names = unique(dc_candidates)
+        if any(name and not name.isdigit() for name in dc_names):
+            dc_names = [name for name in dc_names if name and not name.isdigit()]
+        location_refs = [dc_ref(name) for name in dc_names]
 
         if location_refs:
             description_parts.append(f"DC: {', '.join(location_refs)}")
         elif elb_details.get('DC'):
             description_parts.append(f"DC: {elb_details.get('DC')}")
 
+        primary_dc_name = dc_names[0] if dc_names else None
+        az_refs = [dc_az_ref(name) for name in az_names if isinstance(name, str) and name]
+
         description = '\n'.join(description_parts).strip()
 
-        converted_networks[new_id] = {
+        converted_services[new_id] = {
             'title': elb_details.get('name'),
             'description': description,
             'external_id': elb_details.get('id'),
-            'model': 'Cloud ELB', # Default value
-            'realization_type': 'Виртуальный', # Fixed value for ELB
-            'type': 'Маршрутизатор', # Fixed value for ELB
+            'service_type': 'Шлюз, Балансировщик, прокси',
+            'availabilityzone': az_refs if az_refs else ([dc_az_ref(primary_dc_name)] if primary_dc_name else []),
             'network_connection': network_connection_refs,
-            'segment': segment_ref,
-            'location': location_refs,
-            'address': elb_details.get('address') # Internal IP
+            'location': location_refs
         }
 
-    return {'seaf.ta.components.network': converted_networks}
+    return {'seaf.ta.services.compute_service': converted_services}

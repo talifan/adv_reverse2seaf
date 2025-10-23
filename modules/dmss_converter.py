@@ -1,7 +1,7 @@
 # modules/dmss_converter.py
 
 from warning_reporter import collect_warning  # For collecting conversion warnings
-from id_prefix import ensure_prefix, dc_az_ref, subnet_ref, dc_ref
+from id_prefix import ensure_prefix, subnet_ref, dc_ref, dc_az_ref, segment_ref
 
 def find_dc_az_key(source_data, az_name):
     """Finds the full key for a DC AZ from its name, with robust validation."""
@@ -9,9 +9,19 @@ def find_dc_az_key(source_data, az_name):
         return dc_az_ref(az_name)
     return None
 
-def find_network_key(source_data, subnet_id):
-    """Finds the full key for a Network from its subnet ID."""
-    return subnet_ref(subnet_id) if subnet_id else None
+def _normalize_dc_name(raw_dc: str | None) -> str | None:
+    """Extract the simple DC identifier regardless of how it is provided."""
+    if not isinstance(raw_dc, str):
+        return None
+    value = raw_dc.strip()
+    if not value:
+        return None
+    if '.dc.' in value:
+        return value.split('.dc.', 1)[1]
+    if value.startswith('dc.'):
+        return value.split('dc.', 1)[1]
+    return value
+
 
 def convert(source_data):
     """
@@ -82,27 +92,40 @@ def convert(source_data):
         if available_az_iter and not valid_available_az:
             collect_warning(dms_id, 'available_az', "No valid AZ values found. Location will be empty.")
 
+        # Resolve availability zone references
         az_refs = [find_dc_az_key(source_data, az_name) for az_name in valid_available_az]
-        az_refs = [ref for ref in az_refs if ref] # Filter out None values
+        az_refs = [ref for ref in az_refs if ref]  # Filter out None values
 
-        # Resolve location (DC) based on available_az
-        location_refs = [dc_ref(az_name) for az_name in valid_available_az if az_name]
-        location_refs = [ref for ref in location_refs if ref] # Filter out None values
-
-        # Resolve network_connection (subnet_id)
+        # Resolve network connections (subnet reference)
         network_connection_refs = []
         subnet_id = dms_details.get('subnet_id')
         if not subnet_id:
             collect_warning(dms_id, 'subnet_id', "Missing or empty 'subnet_id'. network_connection will be empty.")
         elif not isinstance(subnet_id, str):
             collect_warning(dms_id, 'subnet_id', f"Invalid type '{type(subnet_id).__name__}' for 'subnet_id'. network_connection will be empty.")
-            subnet_id = None
-        if subnet_id:
-            network_connection_refs.append(find_network_key(source_data, subnet_id))
-        network_connection_refs = [ref for ref in network_connection_refs if ref] # Filter out None values
+        else:
+            network_connection_refs.append(subnet_ref(subnet_id))
+        network_connection_refs = [ref for ref in network_connection_refs if ref]
 
-        if not dms_details.get('vpc_id'):
-            collect_warning(dms_id, 'vpc_id', "Missing 'vpc_id'. Ensure upstream segment references are available.")
+        # Determine DC/location based on AZ or explicit DC hint
+        seen_dc_names = set()
+        location_refs = []
+        primary_dc_name = None
+        if valid_available_az:
+            for az_name in valid_available_az:
+                dc_name = az_name.strip()
+                if not dc_name or dc_name in seen_dc_names:
+                    continue
+                seen_dc_names.add(dc_name)
+                location_refs.append(dc_ref(dc_name))
+            primary_dc_name = valid_available_az[0].strip()
+        else:
+            explicit_dc = _normalize_dc_name(dms_details.get('DC'))
+            if explicit_dc:
+                primary_dc_name = explicit_dc
+                location_refs.append(dc_ref(explicit_dc))
+
+        int_net_segment_ref = segment_ref(primary_dc_name, 'INT-NET') if primary_dc_name else None
 
         converted_clusters[new_id] = {
             'title': dms_details.get('name'),
@@ -114,6 +137,7 @@ def convert(source_data):
             'availabilityzone': az_refs,
             'location': location_refs,
             'network_connection': network_connection_refs,
+            'segment': int_net_segment_ref
         }
 
     return {'seaf.ta.services.cluster': converted_clusters}

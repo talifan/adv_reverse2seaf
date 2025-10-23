@@ -3,16 +3,17 @@ import sys
 import os
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('../modules'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
 from id_prefix import set_prefix
+from id_prefix import set_prefix
 from cluster_virtualization_converter import convert
-
-set_prefix('tenant')
 
 class TestClusterVirtualizationConverter(unittest.TestCase):
 
     def test_convert_cluster_virtualization(self):
+        set_prefix('tenant')
         # Sample input data with various AZs and subnets from ECSs
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {
@@ -58,6 +59,7 @@ class TestClusterVirtualizationConverter(unittest.TestCase):
         self.assertEqual(converted_data, expected_output)
 
     def test_convert_cluster_virtualization_no_ecss(self):
+        set_prefix('tenant')
         # Test case with no ECSs in source data
         source_data = {
             'seaf.ta.reverse.cloud_ru.advanced.ecss': {}

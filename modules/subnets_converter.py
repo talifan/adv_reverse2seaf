@@ -1,17 +1,28 @@
 # modules/subnets_converter.py
 
-def find_vpc_key(source_data, vpc_id):
-    """Finds the full key for a VPC from its ID."""
-    vpcs_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.vpcs', {})
-    for key, details in vpcs_data.items():
-        if details.get('id') == vpc_id:
-            return key
-    return None
+from id_prefix import ensure_prefix, segment_ref
+from location_resolver import LocationResolver
+
+def _normalize_dc_name(value):
+    """Extract simple DC identifier from various representations."""
+    if not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if '.dc.' in cleaned:
+        return cleaned.split('.dc.', 1)[1]
+    if cleaned.startswith('dc.'):
+        return cleaned.split('dc.', 1)[1]
+    return cleaned
 
 def convert(source_data):
     """
     Converts Subnet data to seaf.ta.services.network format.
+    Each subnet is linked to the predefined INT-NET segment of its DC (derived from AZ).
     """
+    ensure_prefix(source_data=source_data)
+    resolver = LocationResolver(source_data)
     subnets_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.subnets', {})
     
     converted_networks = {}
@@ -28,8 +39,21 @@ def convert(source_data):
         if subnet_details.get('tenant'):
             description += f"\nTenant: {subnet_details.get('tenant')}"
         
-        # Find the corresponding network_segment key.
-        vpc_key = find_vpc_key(source_data, subnet_details.get('vpc'))
+        # Determine the segment reference from AZ/DC data
+        dc_name = None
+        for az_field in ('availability_zone', 'az'):
+            az_value = subnet_details.get(az_field)
+            if isinstance(az_value, str) and az_value.strip():
+                dc_name = az_value.strip()
+                break
+        if not dc_name:
+            dc_name = resolver.get_dc_for_subnet(subnet_id)
+        if not dc_name:
+            dc_name = resolver.resolve_dc_name(subnet_details.get('DC'))
+        if not dc_name:
+            dc_name = _normalize_dc_name(subnet_details.get('DC'))
+
+        int_net_segment_ref = segment_ref(dc_name, 'INT-NET') if dc_name else None
         
         # Determine network type based on name
         network_type = 'LAN'
@@ -42,7 +66,7 @@ def convert(source_data):
             'external_id': subnet_details.get('id'),
             'type': network_type,
             'ipnetwork': subnet_details.get('cidr'),
-            'segment': [vpc_key] if vpc_key else []
+            'segment': [int_net_segment_ref] if int_net_segment_ref else []
         }
 
         # Add provider for WAN networks or lan_type for LAN networks

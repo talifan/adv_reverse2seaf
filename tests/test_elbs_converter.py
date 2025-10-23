@@ -4,25 +4,19 @@ import os
 import json
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
+from id_prefix import set_prefix, segment_ref
 from elbs_converter import convert
-
-set_prefix('tenant')
 
 class TestElbsConverter(unittest.TestCase):
 
     def test_convert_elbs(self):
-        # Sample input data including Subnets and VPCs for linking
+        set_prefix('tenant')
+        # Sample input data including Subnets for linking
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
-                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'name': 'vpc-internal'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb': {
                     'id': '6b2820d7-17c6-409a-91cb-b634cf596fdb',
@@ -65,7 +59,8 @@ class TestElbsConverter(unittest.TestCase):
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
                     'DC': 'tenant.dc.01'
                 }
-            }
+            },
+            'seaf.ta.reverse.cloud_ru.advanced.ecss': {}
         }
 
         # Expected output
@@ -92,9 +87,9 @@ class TestElbsConverter(unittest.TestCase):
                     'external_id': '6d174721-db0e-4758-9a96-2f626e1a6632',
                     'model': 'Cloud ELB',
                     'realization_type': 'Виртуальный',
-                    'type': 'Маршрутизатор',
+                    'type': 'Балансировщик',
                     'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
-                    'segment': 'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'segment': 'tenant.segment.ru-moscow-1a.INT-NET',
                     'location': ['tenant.dc.ru-moscow-1a'],
                     'address': '10.10.10.30'
                 }

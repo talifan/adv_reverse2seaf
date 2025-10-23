@@ -1,6 +1,7 @@
 # modules/vpn_gateways_converter.py
 
-from id_prefix import get_prefix, build_id
+from id_prefix import build_id, ensure_prefix, segment_ref, dc_ref
+from location_resolver import LocationResolver
 
 
 def normalize_az(value):
@@ -24,19 +25,26 @@ def find_network_key(source_data, subnet_id):
     """Finds the full key for a Network from its subnet ID."""
     return build_id("subnets", subnet_id) if subnet_id else None
 
-def find_network_segment_key(vpc_id):
-    """Constructs the full key for a Network Segment from its VPC ID."""
-    return build_id("vpcs", vpc_id) if vpc_id else None
-
 def convert(source_data):
     """
     Converts VPN Gateway data to seaf.ta.components.network format.
     """
+    ensure_prefix(source_data=source_data)
+    resolver = LocationResolver(source_data)
     vpn_gateways_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.vpn_gateways', {})
     subnets_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.subnets', {})
     ecss_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.ecss', {})
     
     converted_networks = {}
+
+    def unique(sequence):
+        seen = set()
+        ordered = []
+        for item in sequence:
+            if item and item not in seen:
+                seen.add(item)
+                ordered.append(item)
+        return ordered
     
     for vpn_gw_id, vpn_gw_details in vpn_gateways_data.items():
         new_id = vpn_gw_id
@@ -62,10 +70,6 @@ def convert(source_data):
             (details for key, details in subnets_data.items() if details.get('id') == subnet_id), None
         )
 
-        # Resolve segment from vpc_id
-        vpc_id = vpn_gw_details.get('vpc_id')
-        segment_ref = find_network_segment_key(vpc_id)
-
         az_names = set()
         az_names.update(normalize_az(vpn_gw_details.get('availability_zone')))
         if subnet_details:
@@ -83,23 +87,29 @@ def convert(source_data):
                             if isinstance(disk_props, dict):
                                 az_names.update(normalize_az(disk_props.get('az')))
 
-        location_refs = sorted({build_id("dc", az) for az in az_names if isinstance(az, str) and az})
-
-        dc_hints = set()
-        prefix = get_prefix()
+        dc_candidates = []
+        if subnet_id:
+            subnet_dc = resolver.get_dc_for_subnet(subnet_id)
+            if subnet_dc:
+                dc_candidates.append(subnet_dc)
+        for az_name in az_names:
+            resolved = resolver.resolve_dc_name(az_name)
+            if resolved:
+                dc_candidates.append(resolved)
         if subnet_details:
-            subnet_dc = subnet_details.get('DC')
-            if isinstance(subnet_dc, str) and subnet_dc.startswith(f"{prefix}.dc."):
-                dc_hints.add(subnet_dc)
-        vpn_dc_hint = vpn_gw_details.get('DC')
-        if isinstance(vpn_dc_hint, str) and vpn_dc_hint.startswith(f"{prefix}.dc."):
-            dc_hints.add(vpn_dc_hint)
+            subnet_dc_hint = resolver.resolve_dc_name(subnet_details.get('DC'))
+            if subnet_dc_hint:
+                dc_candidates.append(subnet_dc_hint)
+        vpn_dc_hint = resolver.resolve_dc_name(vpn_gw_details.get('DC'))
+        if vpn_dc_hint:
+            dc_candidates.append(vpn_dc_hint)
 
-        if not location_refs:
-            location_refs = sorted(dc_hints)
+        dc_names = unique(dc_candidates)
+        if any(name and not name.isdigit() for name in dc_names):
+            dc_names = [name for name in dc_names if name and not name.isdigit()]
+        location_refs = [dc_ref(name) for name in dc_names]
 
         if location_refs:
-            # Append location into description for traceability
             location_str = ', '.join(location_refs)
             description = (description + f"\nDC: {location_str}").strip() if description else f"DC: {location_str}"
 
@@ -111,7 +121,7 @@ def convert(source_data):
             'realization_type': 'Виртуальный', # Fixed value for VPN Gateway
             'type': 'VPN', # Fixed value for VPN Gateway
             'network_connection': network_connection_refs,
-            'segment': segment_ref,
+            'segment': segment_ref(dc_names[0], 'INT-NET') if dc_names else None,
             'location': location_refs,
             'address': vpn_gw_details.get('ip_address') # IP Address of the VPN Gateway
         }

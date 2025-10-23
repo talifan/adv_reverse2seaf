@@ -4,25 +4,19 @@ import os
 import json
 
 # Add modules to the python path
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/modules'))
-sys.path.append(os.path.abspath('_metamodel_/iaas/converter/utils'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
+from id_prefix import set_prefix, segment_ref
 from nat_gateways_converter import convert
-
-set_prefix('tenant')
 
 class TestNatGatewaysConverter(unittest.TestCase):
 
     def test_convert_nat_gateways(self):
-        # Sample input data including Subnets and VPCs for linking
+        set_prefix('tenant')
+        # Sample input data including Subnets for linking
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
-                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'name': 'vpc-internal'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
@@ -56,7 +50,8 @@ class TestNatGatewaysConverter(unittest.TestCase):
                     ],
                     'dnat_rules': []
                 }
-            }
+            },
+            'seaf.ta.reverse.cloud_ru.advanced.ecss': {}
         }
 
         # Expected output
@@ -80,7 +75,7 @@ class TestNatGatewaysConverter(unittest.TestCase):
                     'realization_type': 'Виртуальный',
                     'type': 'NAT',
                     'network_connection': ['tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1'],
-                    'segment': 'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'segment': 'tenant.segment.ru-moscow-1c.INT-NET',
                     'location': ['tenant.dc.ru-moscow-1c'],
                     'address': '10.10.0.25'
                 }

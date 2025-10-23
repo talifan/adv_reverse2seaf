@@ -4,23 +4,18 @@ import os
 
 # Add modules to the python path
 sys.path.append(os.path.abspath('modules'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
-from id_prefix import set_prefix
+from id_prefix import set_prefix, segment_ref
+from id_prefix import set_prefix, segment_ref
 from subnets_converter import convert
-
-set_prefix('tenant')
 
 class TestSubnetsConverter(unittest.TestCase):
 
     def test_convert_subnets(self):
-        # Sample input data including VPCs for linking
+        set_prefix('tenant')
+        # Sample input data
         source_data = {
-            'seaf.ta.reverse.cloud_ru.advanced.vpcs': {
-                'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90': {
-                    'id': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
-                    'name': 'vpc-internal'
-                }
-            },
             'seaf.ta.reverse.cloud_ru.advanced.subnets': {
                 'tenant.subnets.0d9f37b6-0889-4763-8cf3-20d9641af0c1': {
                     'id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
@@ -29,7 +24,8 @@ class TestSubnetsConverter(unittest.TestCase):
                     'description': 'Production network',
                     'gateway': '10.10.0.1',
                     'dns_list': ['100.1.3.5', '100.2.6.4'],
-                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90',
+                    'vpc': 'd48e294f-eb6a-4352-8d73-275b7a966e90', # This is no longer used for segment linking
+                    'az': 'ru-moscow-1a',
                     'tenant': '9f7dcs8823ed23e9cwe223ecwe22236',
                     'DC': 'tenant.dc.01'
                 }
@@ -45,7 +41,7 @@ class TestSubnetsConverter(unittest.TestCase):
                     'external_id': '0d9f37b6-0889-4763-8cf3-20d9641af0c1',
                     'type': 'LAN',
                     'ipnetwork': '10.10.0.0/24',
-                    'segment': ['tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90'],
+                    'segment': ['tenant.segment.ru-moscow-1a.INT-NET'],
                     'lan_type': 'Проводная'
                 }
             }

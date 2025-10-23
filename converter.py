@@ -21,7 +21,8 @@ from id_prefix import ensure_prefix
 # Explicitly import converter modules
 from dc_region_converter import convert as dc_region_convert
 from dc_az_converter import convert as dc_az_convert
-from dc_converter import convert as dc_convert # Added DC converter
+from dc_converter import convert as dc_convert
+from dc_predefined_segments_converter import convert as dc_predefined_segments_convert
 from vpcs_converter import convert as vpcs_convert
 from subnets_converter import convert as subnets_convert
 from ecss_converter import convert as ecss_convert
@@ -37,13 +38,14 @@ from eips_converter import convert as eips_convert
 from dmss_converter import convert as dmss_convert
 from security_groups_converter import convert as security_groups_convert
 from branches_converter import convert as branches_convert
-from elbs_converter import convert as elbs_convert # Added ELB converter
+from elbs_converter import convert as elbs_convert
 
 # Map entity names to their converter functions
 CONVERTERS = {
     'dc_region': dc_region_convert,
     'dc_az': dc_az_convert,
-    'dcs': dc_convert, # Added DC converter
+    'dcs': dc_convert,
+    'dc_predefined_segments': dc_predefined_segments_convert,
     'vpcs': vpcs_convert,
     'subnets': subnets_convert,
     'ecss': ecss_convert,
@@ -59,7 +61,7 @@ CONVERTERS = {
     'dmss': dmss_convert,
     'security_groups': security_groups_convert,
     'branches': branches_convert,
-    'elbs': elbs_convert, # Added ELB converter
+    'elbs': elbs_convert,
 }
 
 def load_config(config_path):
@@ -121,6 +123,9 @@ def main():
         return
     print("Source files loaded.")
 
+    # Initialize accumulated data with source data
+    accumulated_data = source_data.copy()
+
     # --- Analytical Summary Tracking ---
     conversion_results = []
     skipped_entities = []
@@ -144,7 +149,7 @@ def main():
             try:
                 print(f"  - Converting {entity_name}...")
                 convert_function = CONVERTERS[entity_name]
-                converted_data = convert_function(source_data)
+                converted_data = convert_function(accumulated_data) # Pass accumulated_data
 
                 # Determine source count
                 source_count = 0
@@ -157,6 +162,9 @@ def main():
                     for target_full_name, entities in converted_data.items():
                         count = len(entities) if isinstance(entities, dict) else 0
                         target_counts[target_full_name] = count
+                        
+                        # Merge converted data into accumulated_data
+                        accumulated_data.setdefault(target_full_name, {}).update(entities)
                         
                         # Save each target entity to its own file
                         # Determine the file name based on the target entity type
