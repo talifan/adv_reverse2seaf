@@ -64,34 +64,34 @@ class TestElbsConverter(unittest.TestCase):
         }
 
         # Expected output
+        listeners_json = json.dumps([
+            {
+                'id': 'a230fdde-fe28-48dd-88a4-59926d9623b0',
+                'name': 'listener-1b3e',
+                'default_pool_id': 'c247be56-3483-4f05-bbff-19705bf3f81c',
+                'protocol_port': 80,
+                'protocol': 'TCP'
+            }
+        ], indent=2)
+        pools_json = json.dumps([
+            {
+                'id': 'c247be56-3483-4f05-bbff-19705bf3f81c',
+                'name': 'server_group-1',
+                'lb_algorithm': 'ROUND_ROBIN',
+                'members': []
+            }
+        ], indent=2)
+
         expected_output = {
-            'seaf.ta.components.network': {
+            'seaf.ta.services.compute_service': {
                 'tenant.elbs.6d174721-db0e-4758-9a96-2f626e1a6632': {
                     'title': 'elb-ingress-test',
-                    'description': 'Test ELB for ingress\nInternal IP: 10.10.10.30\nOperating Status: ONLINE\nProvisioning Status: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nListeners: ' + json.dumps([
-                        {
-                            'id': 'a230fdde-fe28-48dd-88a4-59926d9623b0',
-                            'name': 'listener-1b3e',
-                            'default_pool_id': 'c247be56-3483-4f05-bbff-19705bf3f81c',
-                            'protocol_port': 80,
-                            'protocol': 'TCP'
-                        }
-                    ], indent=2) + '\nPools: ' + json.dumps([
-                        {
-                            'id': 'c247be56-3483-4f05-bbff-19705bf3f81c',
-                            'name': 'server_group-1',
-                            'lb_algorithm': 'ROUND_ROBIN',
-                            'members': []
-                        }
-                    ], indent=2) + '\nDC: tenant.dc.ru-moscow-1a',
+                    'description': 'Test ELB for ingress\nInternal IP: 10.10.10.30\nOperating Status: ONLINE\nProvisioning Status: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nListeners: ' + listeners_json + '\nPools: ' + pools_json + '\nDC: tenant.dc.ru-moscow-1a',
                     'external_id': '6d174721-db0e-4758-9a96-2f626e1a6632',
-                    'model': 'Cloud ELB',
-                    'realization_type': 'Виртуальный',
-                    'type': 'Балансировщик',
-                    'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
-                    'segment': 'tenant.segment.ru-moscow-1a.INT-NET',
+                    'availabilityzone': ['tenant.dc_az.ru-moscow-1a'],
                     'location': ['tenant.dc.ru-moscow-1a'],
-                    'address': '10.10.10.30'
+                    'network_connection': ['tenant.subnets.6b2820d7-17c6-409a-91cb-b634cf596fdb'],
+                    'service_type': 'Шлюз, Балансировщик, прокси'
                 }
             }
         }

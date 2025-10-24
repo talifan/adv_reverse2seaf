@@ -32,16 +32,16 @@ class TestPeeringsConverter(unittest.TestCase):
 
         # Expected output
         expected_output = {
-            'seaf.ta.services.logical_link': {
+            'seaf.ta.services.network_links': {
                 'tenant.peerings.b58bce54-e2c9-4d00-b5eb-a7db6e80bd7c': {
                     'title': 'peering-Internal-External',
                     'description': 'VPC Peering between internal and external VPCs\nStatus: ACTIVE\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: tenant.dc.01',
                     'external_id': 'b58bce54-e2c9-4d00-b5eb-a7db6e80bd7c',
-                    'source': 'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90.router',
-                    'target': [
+                    'network_connection': [
+                        'tenant.vpcs.d48e294f-eb6a-4352-8d73-275b7a966e90.router',
                         'tenant.vpcs.abddcd66-c607-4ec6-9d12-30378e0e54c0.router'
                     ],
-                    'direction': '<==>',
+                    'technology': 'VPC Peering'
                 }
             }
         }

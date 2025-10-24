@@ -9,13 +9,13 @@ def find_router_key(vpc_id):
 
 def convert(source_data):
     """
-    Converts VPC Peerings data to seaf.ta.services.logical_link format.
-    The logical link is created between the routers of the peered VPCs.
+    Converts VPC Peerings data to seaf.ta.services.network_links format.
+    The network link connects routers that represent the peered VPCs.
     """
     ensure_prefix(source_data=source_data)
     peerings_data = source_data.get('seaf.ta.reverse.cloud_ru.advanced.peerings', {})
     
-    converted_logical_links = {}
+    converted_links = {}
     
     for peering_id, peering_details in peerings_data.items():
         new_id = peering_id
@@ -38,14 +38,21 @@ def convert(source_data):
         
         accept_vpc_id = peering_details.get('accept_vpc')
         target_router_ref = find_router_key(accept_vpc_id)
-        
-        converted_logical_links[new_id] = {
+
+        endpoints = [ref for ref in (source_router_ref, target_router_ref) if ref]
+        if len(endpoints) < 2:
+            # Skip link if we can't resolve both endpoints
+            continue
+
+        converted_links[new_id] = {
             'title': peering_details.get('name'),
             'description': description,
             'external_id': peering_details.get('id'),
-            'source': source_router_ref,
-            'target': [target_router_ref] if target_router_ref else [],
-            'direction': '<==>',
+            'network_connection': endpoints,
+            'technology': 'VPC Peering'
         }
 
-    return {'seaf.ta.services.logical_link': converted_logical_links}
+    if not converted_links:
+        return {}
+
+    return {'seaf.ta.services.network_links': converted_links}

@@ -64,7 +64,7 @@ entities_to_convert:
 | `rdss`                       | `seaf.ta.services.cluster`   | Реляционные БД как сервис преобразуются в кластеры типа "СУБД". |
 | `elbs`                       | `seaf.ta.services.compute_service` | Балансировщики нагрузки преобразуются в сервисы категории «Шлюз, Балансировщик, прокси» с сохранением listeners/pools и автоматическими `availabilityzone`/`location`. |
 | `nat_gateways`               | `seaf.ta.components.network` | NAT-шлюзы преобразуются в сетевые устройства типа "NAT" с `location` и сегментом, вычисленными по связанным подсетям и ресурсам. |
-| `peerings`                   | `seaf.ta.services.network_links` | VPC Peering преобразуется в сетевую связь. |
+| `peerings`                   | `seaf.ta.services.network_links` | VPC Peering преобразуется в сетевой линк между маршрутизаторами соответствующих VPC (технология «VPC Peering»). |
 | `vaults`                     | `seaf.ta.services.storage` и `seaf.ta.services.backup` | Хранилища резервных копий преобразуются в сущности хранения и отдельные сущности резервных копий. |
 | `vpn_gateways`               | `seaf.ta.components.network` | VPN-шлюзы преобразуются в сетевые устройства типа "VPN" с `location`, вычисленным на основе подсказок по подсети/ресурсам. |
 | `vpn_connections`            | `seaf.ta.services.logical_link` | VPN-соединения преобразуются в логические связи между шлюзом и сегментом нужного ЦОД. Если удалённый конец отсутствует в данных (например, внешний DC), связь не создаётся. |

@@ -79,17 +79,7 @@ class TestVpnConnectionsConverter(unittest.TestCase):
                     'external_id': 'vpn-hq',
                     'source': 'tenant.vpn_gateways.vpngw-offices',
                     'target': [
-                        'tenant.office.hq'
-                    ],
-                    'direction': '<==>',
-                },
-                'tenant.vpn_connections.vpn-dc02': {
-                    'title': 'vpn-dc02',
-                    'description': 'Remote Gateway IP: 95.64.175.198\nRemote Subnets: 172.16.0.0/16\nTenant: 9f7dcs8823ed23e9cwe223ecwe22236\nDC: tenant.dc.01',
-                    'external_id': 'vpn-dc02',
-                    'source': 'tenant.vpn_gateways.vpngw-offices',
-                    'target': [
-                        'tenant.dc.02'
+                        'tenant.segment.ru-moscow-1a.INT-NET'
                     ],
                     'direction': '<==>',
                 }
