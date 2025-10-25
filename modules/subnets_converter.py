@@ -51,7 +51,17 @@ def convert(source_data):
         if not dc_name:
             dc_name = resolver.resolve_dc_name(subnet_details.get('DC'))
         if not dc_name:
-            dc_name = _normalize_dc_name(subnet_details.get('DC'))
+            normalized_dc = _normalize_dc_name(subnet_details.get('DC'))
+            if normalized_dc and resolver.is_valid_dc_name(normalized_dc):
+                dc_name = normalized_dc
+        if not dc_name:
+            vpc_id = subnet_details.get('vpc')
+            if vpc_id:
+                vpc_dc_candidates = resolver.get_dc_names_for_vpc(vpc_id)
+                if vpc_dc_candidates:
+                    dc_name = vpc_dc_candidates[0]
+        if dc_name and not resolver.is_valid_dc_name(dc_name):
+            dc_name = None
 
         int_net_segment_ref = segment_ref(dc_name, 'INT-NET') if dc_name else None
         

@@ -64,6 +64,12 @@ CONVERTERS = {
     'elbs': elbs_convert,
 }
 
+OVERWRITE_TARGETS = {
+    'seaf.ta.services.backup',
+    'seaf.ta.services.storage',
+    'seaf.ta.services.kb',
+}
+
 def load_config(config_path):
     """Loads configuration from a YAML file."""
     if not os.path.exists(config_path):
@@ -176,8 +182,14 @@ def main():
                             # Default to the last part of the entity name for other types
                             base_file_name = target_full_name.split('.')[-1]
                         
+                        merge_mode = target_full_name not in OVERWRITE_TARGETS
                         file_name = f"{base_file_name}.yaml"
-                        save_converted_data(output_dir, base_file_name, {target_full_name: entities})
+                        save_converted_data(
+                            output_dir,
+                            base_file_name,
+                            {target_full_name: entities},
+                            merge=merge_mode
+                        )
                         converted_files.append(file_name)
                 
                 # Store results for summary

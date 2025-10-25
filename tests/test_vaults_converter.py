@@ -9,9 +9,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'u
 from id_prefix import set_prefix
 from vaults_converter import convert
 
-from id_prefix import set_prefix
-from vaults_converter import convert
-
 class TestVaultsConverter(unittest.TestCase):
 
     def test_convert_vaults(self):
@@ -60,12 +57,13 @@ class TestVaultsConverter(unittest.TestCase):
                     'external_id': '25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c',
                     'type': 'Simple Storage Service', # Changed
                     'software': 'Cloud Backup Service',
-                    'availabilityzone': [],
+                    'availabilityzone': ['tenant.dc_az.01'],
                     'location': ['tenant.dc.01'],
                     'network_connection': [],
                     'sla': None,
                 }
-            },            'seaf.ta.services.backup': {
+            },
+            'seaf.ta.services.backup': {
                 'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c.e5e60a69-0653-4297-8799-ea0df4f0cacc': {
                     'title': 'Backup for ecs-prod-someserver1',
                     'description': 'Resource Name: ecs-prod-someserver1\nResource Type: OS::Nova::Server\nLimit Size: 440 GB\nCurrent Size: 0.0 GB\nBackup Count: 14\nProtect Status: available\nExtra Info: {}',
@@ -73,7 +71,7 @@ class TestVaultsConverter(unittest.TestCase):
                     'path': 'Vault: Daily_Backups',
                     'replication': None,
                     'network_connection': [],
-                    'availabilityzone': [],
+                    'availabilityzone': ['tenant.dc_az.01'],
                     'location': ['tenant.dc.01'],
                     'storage': 'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c'
                 },
@@ -84,7 +82,7 @@ class TestVaultsConverter(unittest.TestCase):
                     'path': 'Vault: Daily_Backups',
                     'replication': None,
                     'network_connection': [],
-                    'availabilityzone': [],
+                    'availabilityzone': ['tenant.dc_az.01'],
                     'location': ['tenant.dc.01'],
                     'storage': 'tenant.vaults.25bd50a1-20a3-4ca7-b84a-d9f6dda9a65c'
                 }

@@ -24,7 +24,7 @@ def load_source_data(input_dir):
                     print(f"Error parsing YAML file {filename}: {e}")
     return aggregated_data
 
-def save_converted_data(output_dir, entity_name, data):
+def save_converted_data(output_dir, entity_name, data, merge=True):
     """
     Saves the converted data to a YAML file in the specified output directory.
     If the file already exists, it merges the new data with the existing data.
@@ -33,7 +33,7 @@ def save_converted_data(output_dir, entity_name, data):
     file_path = os.path.join(output_dir, f"{entity_name}.yaml")
     
     existing_data = {}
-    if os.path.exists(file_path):
+    if merge and os.path.exists(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
             try:
                 existing_data = yaml.safe_load(f)
@@ -62,4 +62,5 @@ def save_converted_data(output_dir, entity_name, data):
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_yaml_string)
-    print(f"    [SUCCESS] Saved/Merged converted {entity_name} to {file_path}")
+    action = "Saved/Merged" if merge else "Saved"
+    print(f"    [SUCCESS] {action} converted {entity_name} to {file_path}")

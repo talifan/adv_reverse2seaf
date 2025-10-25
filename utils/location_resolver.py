@@ -1,4 +1,5 @@
 from collections import defaultdict
+import re
 
 from id_prefix import ensure_prefix
 
@@ -46,6 +47,14 @@ class LocationResolver:
         self.dc_aliases = defaultdict(set)    # dc_name -> {alias_dc_names}
         self._collect_hints(source_data or {})
 
+    INVALID_DC_TOKENS = (
+        'идентификатор',
+        'суности',
+        'placeholder',
+    )
+
+    _VALID_DC_PATTERN = re.compile(r'^[A-Za-z0-9_.-]+$')
+
     def _normalize_dc(self, value):
         if not value or not isinstance(value, str):
             return None
@@ -53,13 +62,38 @@ class LocationResolver:
         if not cleaned:
             return None
         prefix_token = f"{self.prefix}.dc."
+        candidate = cleaned
         if cleaned.startswith(prefix_token):
-            return cleaned[len(prefix_token):]
-        if '.dc.' in cleaned:
-            return cleaned.split('.dc.', 1)[1]
-        if cleaned.startswith('dc.'):
-            return cleaned.split('dc.', 1)[1]
-        return cleaned
+            candidate = cleaned[len(prefix_token):]
+        elif '.dc.' in cleaned:
+            candidate = cleaned.split('.dc.', 1)[1]
+        elif cleaned.startswith('dc.'):
+            candidate = cleaned.split('dc.', 1)[1]
+        if not self._is_valid_dc_name(candidate):
+            return None
+        return candidate
+
+    def _is_valid_dc_name(self, name):
+        if not name:
+            return False
+        normalized = name.strip()
+        if not normalized:
+            return False
+        lowered = normalized.lower()
+        if any(token in lowered for token in self.INVALID_DC_TOKENS):
+            return False
+        if any(ch.isspace() for ch in normalized):
+            return False
+        if '/' in normalized:
+            return False
+        if not any(ch.isdigit() for ch in normalized):
+            return False
+        if not self._VALID_DC_PATTERN.match(normalized):
+            return False
+        return True
+
+    def is_valid_dc_name(self, name):
+        return self._is_valid_dc_name(name)
 
     def _register_alias(self, primary, secondary):
         primary_candidates = [_val for val in _iter_values(primary) if (_val := self._normalize_dc(val))]

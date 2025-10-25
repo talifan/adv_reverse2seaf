@@ -44,6 +44,7 @@ def convert(source_data):
 
     # Precompute subnet networks for AZ lookup
     subnet_networks = []
+    known_dc_names = set()
     for subnet_key, subnet_details in subnets_data.items():
         cidr = subnet_details.get('cidr')
         if not cidr:
@@ -53,6 +54,11 @@ def convert(source_data):
         except ValueError:
             continue
         subnet_networks.append((network, subnet_details, subnet_key))
+        dc_candidate = resolver.get_dc_for_subnet(subnet_key)
+        if dc_candidate:
+            known_dc_names.add(dc_candidate)
+
+    fallback_dc = sorted(known_dc_names)[0] if known_dc_names else None
 
     # Build index from internal IP to entity references
     internal_ip_map = {}
@@ -135,6 +141,11 @@ def convert(source_data):
                 segment_list.append(segment_ref(simple_dc_name, 'INTERNET'))
             else:
                 segment_list.append(segment_ref(simple_dc_name, 'INT-NET'))
+        elif fallback_dc:
+            if is_public:
+                segment_list.append(segment_ref(fallback_dc, 'INTERNET'))
+            else:
+                segment_list.append(segment_ref(fallback_dc, 'INT-NET'))
         else:
             collect_warning(eip_key, 'segment', "Could not determine DC for EIP, segment field will be empty.")
 
